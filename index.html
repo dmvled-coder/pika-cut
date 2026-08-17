@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chùm Hoa Quả Rơi & Xoay</title>
+  <style>
+    body { margin: 0; background: #1a1a1a; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; color: #fff; }
+    #controls { margin-bottom: 10px; display: flex; gap: 15px; align-items: center; background: #2a2a2a; padding: 10px 20px; border-radius: 8px; }
+    canvas { background: #222; border: 2px solid #555; cursor: crosshair; }
+    button { padding: 8px 16px; background: #ff4757; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #ff6b81; }
+  </style>
+</head>
+<body>
+
+<div id="controls">
+  <button onclick="spawnCluster()">Bắn chùm quả!</button>
+  <label for="speedRange">Tốc độ rơi:</label>
+  <input type="range" id="speedRange" min="0.5" max="4" step="0.1" value="1">
+  <span id="speedValue">1x</span>
+</div>
+
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const speedInput = document.getElementById('speedRange');
+  const speedDisplay = document.getElementById('speedValue');
+
+  let speedMultiplier = 1;
+  let fruits = [];
+
+  // Danh sách các loại quả (dùng Emoji làm ví dụ cho gọn)
+  const FRUIT_TYPES = [
+    { name: 'Táo', emoji: '🍎', radius: 25 },
+    { name: 'Dưa hấu', emoji: '🍉', radius: 35 },
+    { name: 'Chuối', emoji: '🍌', radius: 25 },
+    { name: 'Cam', emoji: '🍊', radius: 25 },
+    { name: 'Dứa', emoji: '🍍', radius: 30 },
+    { name: 'Dâu', emoji: '🍓', radius: 20 }
+  ];
+
+  speedInput.addEventListener('input', (e) => {
+    speedMultiplier = parseFloat(e.target.value);
+    speedDisplay.innerText = speedMultiplier + 'x';
+  });
+
+  class Fruit {
+    constructor(x, y) {
+      // Chọn ngẫu nhiên loại quả
+      this.type = FRUIT_TYPES[Math.floor(Math.random() * FRUIT_TYPES.length)];
+      this.x = x;
+      this.y = y;
+      this.radius = this.type.radius;
+
+      // Tốc độ rơi cơ sở ngẫu nhiên
+      this.baseFallSpeed = Math.random() * 2 + 2; 
+
+      // Góc xoay hiện tại và tốc độ xoay (dương = quay phải, âm = quay trái)
+      this.angle = Math.random() * Math.PI * 2;
+      this.rotationSpeed = (Math.random() - 0.5) * 0.1; 
+    }
+
+    update() {
+      // Cập nhật vị trí rơi theo hệ số tốc độ
+      this.y += this.baseFallSpeed * speedMultiplier;
+      
+      // Cập nhật góc xoay
+      this.angle += this.rotationSpeed * speedMultiplier;
+    }
+
+    draw() {
+      ctx.save();
+      
+      // Di chuyển tâm tọa độ đến tâm của quả
+      ctx.translate(this.x, this.y);
+      
+      // Xoay canvas theo góc của quả
+      ctx.rotate(this.angle);
+
+      // Vẽ hình hoặc emoji (vẽ tại tâm 0, 0)
+      ctx.font = `${this.radius * 1.8}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(this.type.emoji, 0, 0);
+
+      ctx.restore();
+    }
+  }
+
+  // Hàm thả 1 chùm quả từ trên xuống
+  function spawnCluster() {
+    const clusterSize = Math.floor(Math.random() * 4) + 3; // 3 - 6 quả
+    const startX = Math.random() * (canvas.width - 200) + 100;
+
+    for (let i = 0; i < clusterSize; i++) {
+      // Rải các quả lệch vị trí X và Y một chút để tạo thành chùm
+      const offsetX = (Math.random() - 0.5) * 120;
+      const offsetY = -Math.random() * 100 - 40;
+      fruits.push(new Fruit(startX + offsetX, offsetY));
+    }
+  }
+
+  function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = fruits.length - 1; i >= 0; i--) {
+      let f = fruits[i];
+      f.update();
+      f.draw();
+
+      // Xóa quả khi vượt quá đáy màn hình
+      if (f.y - f.radius > canvas.height) {
+        fruits.splice(i, 1);
+      }
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Tự động thả chùm quả định kỳ
+  setInterval(() => {
+    if (Math.random() < 0.6) spawnCluster();
+  }, 2000);
+
+  gameLoop();
+</script>
+</body>
+</html>
