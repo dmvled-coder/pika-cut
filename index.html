@@ -16,7 +16,6 @@
       border: 1px solid #333; border-bottom: none; height: 50px;
     }
 
-    /* Style nút bấm hiện đại */
     .btn {
       padding: 8px 14px; font-size: 13px; font-weight: 700; border: none; border-radius: 8px;
       cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center;
@@ -25,7 +24,7 @@
     .btn-secondary { background: #252525; color: #00d2d3; border: 1px solid #00d2d3; }
     .btn-secondary:hover { background: #00d2d3; color: #121212; }
     
-    /* Nút Bắt đầu nổi giữa màn hình */
+    /* Overlay Màn hình bắt đầu */
     #start-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(3px);
@@ -36,9 +35,28 @@
       padding: 16px 32px; font-size: 20px; font-weight: 800;
       background: linear-gradient(135deg, #ff9f43, #ee5253); color: #fff;
       border: none; border-radius: 50px; cursor: pointer;
-      box-shadow: 0 6px 20px rgba(238, 82, 83, 0.5); transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 6px 20px rgba(238, 82, 83, 0.5); transition: transform 0.2s;
     }
-    .btn-start-center:hover { transform: scale(1.08); box-shadow: 0 8px 25px rgba(238, 82, 83, 0.7); }
+    .btn-start-center:hover { transform: scale(1.08); }
+
+    /* Bảng Kết Quả Thắng / Thua Modal Popup */
+    #result-modal {
+      display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+      flex-direction: column; align-items: center; justify-content: center;
+      z-index: 30; border-radius: 12px; animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+    .modal-card {
+      background: #222; border: 2px solid #444; border-radius: 16px;
+      padding: 24px 32px; text-align: center; width: 80%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .result-title { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+    .result-title.win { color: #2ed573; }
+    .result-title.lose { color: #ff4757; }
+    .result-time { font-size: 16px; color: #ccc; margin-bottom: 20px; }
 
     #status { text-align: center; font-size: 13px; font-weight: 600; color: #feca57; width: 100%; }
 
@@ -54,13 +72,9 @@
     #cooldown-svg { position: absolute; top: -2px; left: -2px; width: 44px; height: 44px; transform: rotate(-90deg); }
     #cooldown-circle {
       fill: none; stroke: #ff9f43; stroke-width: 3.5;
-      stroke-dasharray: 120; /* 2 * PI * r (r=19) */
-      stroke-dashoffset: 0; transition: stroke-dashoffset 0.05s linear;
+      stroke-dasharray: 120; stroke-dashoffset: 0; transition: stroke-dashoffset 0.05s linear;
     }
-    #shield-preview {
-      background: #eccc68; border-radius: 2px; transition: all 0.2s ease;
-      box-shadow: 0 0 6px rgba(236, 204, 104, 0.6);
-    }
+    #shield-preview { background: #eccc68; border-radius: 2px; transition: all 0.2s ease; }
     .preview-vertical { width: 8px; height: 18px; }
     .preview-horizontal { width: 18px; height: 8px; }
   </style>
@@ -68,13 +82,11 @@
 <body>
 
 <div id="game-container">
-  <!-- Thanh Header chứa nút Xoay (Góc trái) & Trạng thái (Giữa) -->
   <div id="header-bar">
     <button id="rotateBtn" class="btn btn-secondary" onclick="toggleRotate()">🔄 Xoay</button>
     <div id="status">Bấm Bắt đầu để chơi</div>
   </div>
 
-  <!-- Widget hình thu nhỏ góc trên bên phải -->
   <div id="shield-widget">
     <svg id="cooldown-svg">
       <circle id="cooldown-circle" cx="22" cy="22" r="19"></circle>
@@ -82,9 +94,18 @@
     <div id="shield-preview" class="preview-vertical"></div>
   </div>
 
-  <!-- Nút Bắt đầu nổi chính giữa màn hình -->
+  <!-- Nút Bắt Đầu nổi -->
   <div id="start-overlay">
     <button class="btn-start-center" onclick="startGame()">▶ BẮT ĐẦU</button>
+  </div>
+
+  <!-- Bảng Thông Báo Thắng / Thua -->
+  <div id="result-modal">
+    <div class="modal-card">
+      <div id="modal-title" class="result-title">THẮNG!</div>
+      <div id="modal-time" class="result-time">Thời gian: 0.0s</div>
+      <button class="btn-start-center" style="font-size: 16px; padding: 12px 28px;" onclick="restartGame()">🔄 CHƠI LẠI</button>
+    </div>
   </div>
 
   <canvas id="gameCanvas" width="400" height="600"></canvas>
@@ -95,7 +116,7 @@
   const ctx = canvas.getContext('2d');
   
   const COLS = 10, ROWS = 15;
-  const CELL = canvas.width / COLS; // 40px
+  const CELL = canvas.width / COLS;
 
   let grid = []; 
   let mouse = { x: 0, y: 0, active: false, speed: 0 };
@@ -106,17 +127,20 @@
   let isHorizontal = false; 
   let canPlace = false;
 
-  const COOLDOWN_TIME = 1500; // 1.5s
+  const COOLDOWN_TIME = 1500;
   let cooldownStart = 0;
 
   const circle = document.getElementById('cooldown-circle');
   const preview = document.getElementById('shield-preview');
-  const overlay = document.getElementById('start-overlay');
-  const maxDash = 120; // 2 * PI * 19
+  const startOverlay = document.getElementById('start-overlay');
+  const resultModal = document.getElementById('result-modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalTime = document.getElementById('modal-time');
+  const maxDash = 120;
 
   function initGrid() {
     grid = Array(ROWS).fill(0).map(() => Array(COLS).fill(0));
-    for(let c = 0; c < COLS; c++) grid[ROWS-1][c] = 2; // Kho Bánh mì
+    for(let c = 0; c < COLS; c++) grid[ROWS-1][c] = 2;
   }
 
   function toggleRotate() {
@@ -165,11 +189,12 @@
     canPlace = true;
     preview.style.opacity = "1";
     circle.style.strokeDashoffset = 0;
-    overlay.style.display = 'none'; // Ẩn overlay khi chơi
+    
+    startOverlay.style.display = 'none';
+    resultModal.style.display = 'none';
     
     selectedDoor = doors[Math.floor(Math.random() * doors.length)];
     
-    // Tốc độ chuột giảm 1 nửa: (canvas.height / 6) / 60
     mouse = {
       x: selectedDoor * CELL + CELL / 2,
       y: 0 + CELL / 2,
@@ -186,6 +211,21 @@
         document.getElementById('status').innerText = "🐭 Chặn chuột ngay!";
       }
     }, 3000);
+  }
+
+  function showResult(isWin) {
+    gameRunning = false;
+    modalTitle.innerText = isWin ? "🎉 BẠN THẮNG!" : "💀 BẠN THUA!";
+    modalTitle.className = `result-title ${isWin ? 'win' : 'lose'}`;
+    modalTime.innerText = isWin 
+      ? `Đã vây kín chuột trong ${elapsedTime}s` 
+      : `Chuột đã ăn mất bánh mì sau ${elapsedTime}s`;
+    
+    resultModal.style.display = 'flex';
+  }
+
+  function restartGame() {
+    startGame();
   }
 
   function findPath(startX, startY) {
@@ -246,9 +286,7 @@
       let path = findPath(mouse.x, mouse.y);
 
       if (!path) {
-        gameRunning = false;
-        document.getElementById('status').innerText = `🎉 THẮNG! Vây kín trong ${elapsedTime}s`;
-        overlay.style.display = 'flex'; // Hiện lại nút Start
+        showResult(true); // Báo Thắng
         return;
       }
 
@@ -270,9 +308,7 @@
       }
 
       if (Math.floor(mouse.y / CELL) >= ROWS - 1) {
-        gameRunning = false;
-        document.getElementById('status').innerText = `💀 THUA! (${elapsedTime}s)`;
-        overlay.style.display = 'flex'; // Hiện lại nút Start
+        showResult(false); // Báo Thua
       }
     }
   }
@@ -280,7 +316,6 @@
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Lưới & Tấm chắn
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         if (grid[r][c] === 1) {
@@ -293,19 +328,16 @@
       }
     }
 
-    // Kho Bánh Mì
     ctx.fillStyle = '#222';
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText("🥖 KHO BÁNH MÌ 🥖", canvas.width / 2, canvas.height - 12);
 
-    // 3 Cửa xuất phát
     doors.forEach(d => {
       ctx.fillStyle = (d === selectedDoor && gameRunning) ? '#ff4757' : '#54a0ff';
       ctx.fillRect(d * CELL, 0, CELL, 8);
     });
 
-    // Con Chuột
     if (gameRunning) {
       ctx.font = '24px serif';
       ctx.textAlign = 'center';
