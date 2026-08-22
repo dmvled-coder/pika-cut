@@ -155,11 +155,12 @@
     circle.style.strokeDashoffset = 0;
     
     selectedDoor = doors[Math.floor(Math.random() * doors.length)];
+    //Tốc độ chuột (canvas.height / m (số giây))
     mouse = {
       x: selectedDoor * CELL + CELL / 2,
       y: 0 + CELL / 2,
       active: false,
-      speed: (canvas.height / 3) / 60 
+      speed: (canvas.height / 5) / 60 
     };
 
     document.getElementById('startBtn').disabled = true;
