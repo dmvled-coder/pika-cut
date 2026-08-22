@@ -8,7 +8,7 @@
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
     html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #121212; color: #fff; touch-action: none; }
     
-    #game-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #game-container { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; }
 
     /* Màn hình Chọn Nhân Vật */
     #select-overlay {
@@ -17,7 +17,7 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 20;
     }
-    .select-title { font-size: 24px; font-weight: 800; margin-bottom: 24px; color: #feca57; text-align: center; }
+    .select-title { font-size: 22px; font-weight: 800; margin-bottom: 24px; color: #feca57; text-align: center; }
     .char-options { display: flex; gap: 16px; margin-bottom: 30px; }
     .char-card {
       width: 80px; height: 90px; background: #252525; border: 2px solid #444; border-radius: 12px;
@@ -30,7 +30,7 @@
     .char-card.selected .name { color: #ff9f43; }
 
     .btn-start {
-      padding: 14px 40px; font-size: 20px; font-weight: 800;
+      padding: 14px 40px; font-size: 18px; font-weight: 800;
       background: linear-gradient(135deg, #ff9f43, #ee5253); color: #fff;
       border: none; border-radius: 50px; cursor: pointer;
       box-shadow: 0 6px 20px rgba(238, 82, 83, 0.5); transition: transform 0.2s;
@@ -56,13 +56,13 @@
     .result-title.lose { color: #ff4757; }
     .result-time { font-size: 15px; color: #ccc; margin-bottom: 20px; }
 
-    canvas { background: #1a1a1a; display: block; }
+    canvas { background: #1e1e1e; display: block; border: 1px solid #333; }
 
     /* Widget đếm ngược tấm chắn */
     #shield-widget {
       position: absolute; top: 50%; right: 15px; transform: translateY(-50%);
-      width: 48px; height: 48px; background: rgba(30, 30, 30, 0.4); backdrop-filter: blur(2px);
-      border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.2);
+      width: 48px; height: 48px; background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(2px);
+      border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.3);
       display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none;
     }
     #cooldown-svg { position: absolute; top: -2px; left: -2px; width: 48px; height: 48px; transform: rotate(-90deg); }
@@ -70,7 +70,7 @@
       fill: none; stroke: #ff9f43; stroke-width: 3.5;
       stroke-dasharray: 132; stroke-dashoffset: 0; transition: stroke-dashoffset 0.05s linear;
     }
-    #shield-preview { width: 14px; height: 14px; background: #eccc68; border-radius: 2px; }
+    #shield-preview { width: 16px; height: 16px; background: #eccc68; border-radius: 2px; }
   </style>
 </head>
 <body>
@@ -122,7 +122,7 @@
   const ctx = canvas.getContext('2d');
 
   const COLS = 10;
-  const TOTAL_ROWS = 15; // 2 hàng chuồng (~10%), 12 hàng chơi (~80%), 1 hàng bánh mì (~10%)
+  const TOTAL_ROWS = 15; // 2 hàng chuồng (10%), 12 hàng chơi (80%), 1 hàng bánh mì (10%)
   const CAGE_ROWS = 2;
   let CELL = 40;
 
@@ -162,19 +162,18 @@
   }
 
   function resizeCanvas() {
-    const availableWidth = window.innerWidth;
-    const availableHeight = window.innerHeight;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
 
-    const cellW = availableWidth / COLS;
-    const cellH = availableHeight / TOTAL_ROWS;
-    CELL = Math.min(cellW, cellH);
+    const cellW = Math.floor(w / COLS);
+    const cellH = Math.floor(h / TOTAL_ROWS);
+    CELL = Math.max(15, Math.min(cellW, cellH));
 
     canvas.width = CELL * COLS;
     canvas.height = CELL * TOTAL_ROWS;
   }
 
   function onStartClick() {
-    // Thử bật toàn màn hình an toàn, không chặn luồng chính
     try {
       const elem = document.documentElement;
       if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
@@ -185,7 +184,10 @@
     startGame();
   }
 
-  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    if (!gameRunning) draw();
+  });
 
   function initGrid() {
     grid = Array(TOTAL_ROWS).fill(0).map(() => Array(COLS).fill(0));
@@ -195,7 +197,7 @@
       grid[TOTAL_ROWS - 1][c] = 2;
     }
 
-    // Tạo 3 chướng ngại vật cố định ở 3 hàng dọc cách đều nhau trong vùng chơi
+    // 3 Chướng ngại vật cố định ở 3 hàng cách đều nhau
     const obstacleRows = [3, 7, 11];
     obstacleRows.forEach(r => {
       let randomCol = Math.floor(Math.random() * COLS);
@@ -250,17 +252,17 @@
     
     selectedDoor = doors[Math.floor(Math.random() * doors.length)];
     
-    // Nhân vật di chuyển qua lại trong chuồng (10% trên)
+    // Nhân vật chạy trong chuồng
     runner = {
       x: canvas.width / 2,
-      y: CELL * 0.8,
+      y: CELL * 0.9,
       vx: Math.max(2, CELL * 0.08),
       speed: (canvas.height / 6) / 60,
       active: false,
       escaped: false
     };
 
-    // Sau 3 giây cửa mở và nhân vật chui ra
+    // 3 Giây sau cửa mở
     setTimeout(() => {
       if (gameRunning) {
         runner.escaped = true;
@@ -314,25 +316,26 @@
     return null;
   }
 
-  canvas.addEventListener('pointerdown', (e) => {
+  function handlePlacement(clientX, clientY) {
     if (!gameRunning || !canPlace) return;
 
     const rect = canvas.getBoundingClientRect();
-    const c = Math.floor((e.clientX - rect.left) / CELL);
-    const r = Math.floor((e.clientY - rect.top) / CELL);
+    const c = Math.floor((clientX - rect.left) / CELL);
+    const r = Math.floor((clientY - rect.top) / CELL);
 
-    // Chỉ đặt tấm chắn 1 ô trong vùng giữa (80%)
+    // Chỉ đặt tấm chắn ở Vùng giữa (80%)
     if (r >= CAGE_ROWS && r < TOTAL_ROWS - 1 && grid[r][c] === 0) {
       grid[r][c] = 1;
       startCooldown();
     }
-  });
+  }
+
+  canvas.addEventListener('pointerdown', (e) => handlePlacement(e.clientX, e.clientY));
 
   function update() {
     if (!gameRunning) return;
 
     if (!runner.escaped) {
-      // Chạy qua chạy lại trong chuồng, chạm tường bật ngược lại
       runner.x += runner.vx;
       if (runner.x - CELL / 3 <= 0 || runner.x + CELL / 3 >= canvas.width) {
         runner.vx *= -1;
@@ -372,50 +375,65 @@
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Chuồng (10% trên)
-    ctx.fillStyle = '#2d2d2d';
+    // 1. CHUỒNG (10% Trên cùng - 2 Hàng)
+    ctx.fillStyle = '#252525';
     ctx.fillRect(0, 0, canvas.width, CAGE_ROWS * CELL);
     
-    ctx.strokeStyle = '#555';
+    // Song sắt chuồng
+    ctx.strokeStyle = '#444';
     ctx.lineWidth = 2;
-    ctx.strokeRect(0, 0, canvas.width, CAGE_ROWS * CELL);
-    
     for (let c = 1; c < COLS; c++) {
       ctx.beginPath();
       ctx.moveTo(c * CELL, 0);
-      ctx.lineTo(c * CELL, CAGE_ROWS * CELL - 8);
+      ctx.lineTo(c * CELL, CAGE_ROWS * CELL - 6);
       ctx.stroke();
     }
+    // Khung viền chuồng
+    ctx.strokeStyle = '#ff9f43';
+    ctx.strokeRect(0, 0, canvas.width, CAGE_ROWS * CELL);
 
-    // Cửa chuồng
+    // 3 Cửa thoát
     doors.forEach(d => {
       let isOpen = (d === selectedDoor && runner.escaped);
       ctx.fillStyle = isOpen ? '#2ed573' : (d === selectedDoor && gameRunning ? '#ff4757' : '#54a0ff');
-      ctx.fillRect(d * CELL, CAGE_ROWS * CELL - 8, CELL, 8);
+      ctx.fillRect(d * CELL + 2, CAGE_ROWS * CELL - 8, CELL - 4, 8);
     });
 
-    // 2. Vùng chơi (80% giữa) & Bánh mì (10% dưới)
+    // 2. VÙNG CHƠI (80% Giữa - 12 Hàng) & KHO BÁNH MÌ (10% Dưới - 1 Hàng)
     for (let r = CAGE_ROWS; r < TOTAL_ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
+        // Lưới ô vuông vùng chơi
+        if (r < TOTAL_ROWS - 1) {
+          ctx.strokeStyle = '#2a2a2a';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(c * CELL, r * CELL, CELL, CELL);
+        }
+
         if (grid[r][c] === 1) {
+          // Tấm chắn 1 ô
           ctx.fillStyle = '#eccc68';
-          ctx.fillRect(c * CELL + 1, r * CELL + 1, CELL - 2, CELL - 2);
+          ctx.fillRect(c * CELL + 2, r * CELL + 2, CELL - 4, CELL - 4);
+          ctx.strokeStyle = '#ff9f43';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(c * CELL + 2, r * CELL + 2, CELL - 4, CELL - 4);
         } else if (grid[r][c] === 2) {
+          // Kho Bánh mì
           ctx.fillStyle = '#ffbe76';
           ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
         }
       }
     }
 
-    // Chữ Kho Bánh Mì
+    // Nhãn Kho Bánh Mì
     ctx.fillStyle = '#222';
-    ctx.font = `bold ${Math.max(10, CELL * 0.35)}px sans-serif`;
+    ctx.font = `bold ${Math.max(12, CELL * 0.4)}px sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText("🥖 KHO BÁNH MÌ 🥖", canvas.width / 2, canvas.height - CELL * 0.3);
+    ctx.textBaseline = 'middle';
+    ctx.fillText("🥖 KHO BÁNH MÌ 🥖", canvas.width / 2, (TOTAL_ROWS - 0.5) * CELL);
 
-    // 3. Nhân vật
+    // 3. VẼ NHÂN VẬT
     if (gameRunning) {
-      ctx.font = `${CELL * 0.65}px serif`;
+      ctx.font = `${Math.floor(CELL * 0.7)}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(selectedEmoji, runner.x, runner.y);
@@ -428,6 +446,7 @@
     requestAnimationFrame(gameLoop);
   }
 
+  // Khởi chạy ngay
   resizeCanvas();
   gameLoop();
 </script>
