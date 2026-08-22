@@ -3,191 +3,224 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chém Hoa Quả - Pika Cut</title>
+  <title>Ngăn Chuột Ăn Bánh Mì</title>
   <style>
-    body { margin: 0; background: #1a1a1a; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; color: #fff; touch-action: none; }
-    #controls { margin-bottom: 10px; display: flex; gap: 15px; align-items: center; background: #2a2a2a; padding: 10px 20px; border-radius: 8px; z-index: 10; }
-    canvas { background: #222; border: 2px solid #555; cursor: crosshair; }
-    button { padding: 8px 16px; background: #ff4757; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-    button:hover { background: #ff6b81; }
+    body { margin: 0; background: #1e1e1e; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; touch-action: none; }
+    #ui { margin-bottom: 10px; display: flex; gap: 15px; align-items: center; background: #2d2d2d; padding: 10px 20px; border-radius: 8px; }
+    canvas { background: #333; border: 3px solid #555; }
+    button { padding: 8px 16px; background: #ffa500; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; }
+    button:disabled { background: #555; color: #888; }
+    #status { font-weight: bold; color: #4cd137; }
   </style>
 </head>
 <body>
 
-<div id="controls">
-  <button onclick="spawnCluster()">Thả chùm quả</button>
-  <label for="speedRange">Tốc độ:</label>
-  <input type="range" id="speedRange" min="0.5" max="3" step="0.1" value="1">
-  <span id="speedValue">1x</span>
-  <span style="margin-left: 15px; font-weight: bold; color: #2ed573;" id="scoreBoard">Điểm: 0</span>
+<div id="ui">
+  <button id="startBtn" onclick="startGame()">Bắt đầu (Start)</button>
+  <button id="rotateBtn" onclick="toggleRotate()">Xoay tấm chắn (Hiện: Dọc)</button>
+  <span id="status">Bấm Start để chơi</span>
 </div>
 
-<canvas id="gameCanvas" width="800" height="600"></canvas>
+<canvas id="gameCanvas" width="400" height="600"></canvas>
 
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
-  const speedInput = document.getElementById('speedRange');
-  const speedDisplay = document.getElementById('speedValue');
-  const scoreBoard = document.getElementById('scoreBoard');
+  
+  const COLS = 10, ROWS = 15;
+  const CELL = canvas.width / COLS; // 40px mỗi ô
 
-  let speedMultiplier = 1;
-  let score = 0;
-  let fruits = [];
-  let mouseTrail = [];
+  let grid = []; 
+  let mouse = { x: 0, y: 0, path: [], active: false, speed: 0 };
+  let doors = [1, 4, 8]; // 3 vị trí cửa ngẫu nhiên ở hàng trên cùng
+  let selectedDoor = 4;
+  let gameRunning = false;
+  let startTime = 0, elapsedTime = 0;
+  let isHorizontal = false; // Tấm chắn mặc định là Dọc (1x2)
+  let canPlace = false;
+  let cooldownTimer = null;
 
-  const FRUIT_TYPES = [
-    { name: 'Táo', emoji: '🍎', radius: 30 },
-    { name: 'Dưa hấu', emoji: '🍉', radius: 40 },
-    { name: 'Chuối', emoji: '🍌', radius: 30 },
-    { name: 'Cam', emoji: '🍊', radius: 30 },
-    { name: 'Dứa', emoji: '🍍', radius: 35 },
-    { name: 'Dâu', emoji: '🍓', radius: 25 }
-  ];
-
-  speedInput.addEventListener('input', (e) => {
-    speedMultiplier = parseFloat(e.target.value);
-    speedDisplay.innerText = speedMultiplier + 'x';
-  });
-
-  class Fruit {
-    constructor(x, y) {
-      this.type = FRUIT_TYPES[Math.floor(Math.random() * FRUIT_TYPES.length)];
-      this.x = x;
-      this.y = y;
-      this.radius = this.type.radius;
-      this.baseFallSpeed = Math.random() * 2 + 2;
-      this.angle = Math.random() * Math.PI * 2;
-      this.rotationSpeed = (Math.random() - 0.5) * 0.08;
-      
-      this.sliced = false;
-      // Tốc độ văng của 2 nửa khi bị chém
-      this.sliceOffX = 0;
-    }
-
-    update() {
-      this.y += this.baseFallSpeed * speedMultiplier;
-      this.angle += this.rotationSpeed * speedMultiplier;
-
-      if (this.sliced) {
-        this.sliceOffX += 2; // Tách 2 nửa ra xa dần
-      }
-    }
-
-    draw() {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.angle);
-
-      ctx.font = `${this.radius * 1.8}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      if (!this.sliced) {
-        ctx.fillText(this.type.emoji, 0, 0);
-      } else {
-        // Vẽ 2 nửa bị cắt văng ra hai bên
-        ctx.save();
-        ctx.translate(-this.sliceOffX, 0);
-        ctx.fillText(this.type.emoji, 0, 0);
-        ctx.restore();
-
-        ctx.save();
-        ctx.translate(this.sliceOffX, 0);
-        ctx.fillText(this.type.emoji, 0, 0);
-        ctx.restore();
-      }
-
-      ctx.restore();
-    }
+  function initGrid() {
+    grid = Array(ROWS).fill(0).map(() => Array(COLS).fill(0));
+    // Đáy màn hình là kho Bánh Mì (Hàng cuối)
+    for(let c=0; c<COLS; c++) grid[ROWS-1][c] = 2; // 2: Bánh mì
   }
 
-  function spawnCluster() {
-    const clusterSize = Math.floor(Math.random() * 3) + 3;
-    const startX = Math.random() * (canvas.width - 200) + 100;
-
-    for (let i = 0; i < clusterSize; i++) {
-      const offsetX = (Math.random() - 0.5) * 140;
-      const offsetY = -Math.random() * 120 - 50;
-      fruits.push(new Fruit(startX + offsetX, offsetY));
-    }
+  function toggleRotate() {
+    isHorizontal = !isHorizontal;
+    document.getElementById('rotateBtn').innerText = `Xoay tấm chắn (Hiện: ${isHorizontal ? 'Ngang' : 'Dọc'})`;
   }
 
-  // --- LẮNG NGHE THAO TÁC CHÉM (CHUỘT & CẢM ỨNG) ---
-  function addTrailPoint(clientX, clientY) {
+  function startGame() {
+    initGrid();
+    gameRunning = true;
+    canPlace = true; // Cho phép đặt 1 tấm ngay khi Start
+    selectedDoor = doors[Math.floor(Math.random() * doors.length)];
+    
+    mouse = {
+      x: selectedDoor * CELL + CELL/2,
+      y: 0 + CELL/2,
+      active: false,
+      speed: (canvas.height / 3) / 60 // 3 giây đi hết chiều dọc (~60fps)
+    };
+
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('status').innerText = "Chuột sẽ xuất hiện sau 3 giây...";
+
+    // 3 giây sau chuột bắt đầu chạy
+    setTimeout(() => {
+      if (gameRunning) {
+        mouse.active = true;
+        startTime = Date.now();
+        document.getElementById('status').innerText = "Ngăn chuột lại!";
+      }
+    }, 3000);
+  }
+
+  // Thuật toán A* tìm đường đi ngắn nhất cho chuột
+  function findPath(startX, startY) {
+    let startNode = { x: Math.floor(startX / CELL), y: Math.floor(startY / CELL) };
+    let queue = [[startNode]];
+    let visited = new Set();
+    visited.add(`${startNode.x},${startNode.y}`);
+
+    while(queue.length > 0) {
+      let path = queue.shift();
+      let curr = path[path.length - 1];
+
+      if (curr.y === ROWS - 1) return path; // Đã chạm kho bánh mì
+
+      let neighbors = [
+        {x: curr.x, y: curr.y + 1}, // Xuống
+        {x: curr.x - 1, y: curr.y}, // Trái
+        {x: curr.x + 1, y: curr.y}, // Phải
+        {x: curr.x, y: curr.y - 1}  // Lên
+      ];
+
+      for (let n of neighbors) {
+        if (n.x >= 0 && n.x < COLS && n.y >= 0 && n.y < ROWS) {
+          if (grid[n.y][n.x] !== 1 && !visited.has(`${n.x},${n.y}`)) { // 1: Tấm chắn
+            visited.add(`${n.x},${n.y}`);
+            queue.push([...path, n]);
+          }
+        }
+      }
+    }
+    return null; // Không có đường đi (Chuột bị vây kín)
+  }
+
+  // Xử lý sự kiện bấm đặt Tấm Chắn
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!gameRunning || !canPlace) return;
+
     const rect = canvas.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    mouseTrail.push({ x, y });
-    if (mouseTrail.length > 8) mouseTrail.shift();
-  }
+    const c = Math.floor((e.clientX - rect.left) / CELL);
+    const r = Math.floor((e.clientY - rect.top) / CELL);
 
-  canvas.addEventListener('mousemove', (e) => {
-    if (e.buttons === 1) addTrailPoint(e.clientX, e.clientY);
+    // Xác định 2 ô đặt tấm chắn (Ngang: 2x1, Dọc: 1x2)
+    let cellsToBlock = isHorizontal ? [[r, c], [r, c + 1]] : [[r, c], [r + 1, c]];
+
+    // Kiểm tra hợp lệ
+    let valid = cellsToBlock.every(([nr, nc]) => 
+      nr >= 0 && nr < ROWS - 1 && nc >= 0 && nc < COLS && grid[nr][nc] === 0
+    );
+
+    if (valid) {
+      cellsToBlock.forEach(([nr, nc]) => grid[nr][nc] = 1);
+      canPlace = false; // Chờ 1.5s cho tấm tiếp theo
+
+      // Đếm ngược 1.5s
+      setTimeout(() => { if (gameRunning) canPlace = true; }, 1500);
+    }
   });
 
-  canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    addTrailPoint(touch.clientX, touch.clientY);
-  }, { passive: false });
+  function update() {
+    if (!gameRunning) return;
 
-  // --- VẼ ĐƯỜNG KIẾM & XỬ LÝ VA CHẠM ---
-  function handleInteractions() {
-    // Vẽ vệt chém
-    if (mouseTrail.length > 1) {
-      ctx.beginPath();
-      ctx.moveTo(mouseTrail[0].x, mouseTrail[0].y);
-      for (let i = 1; i < mouseTrail.length; i++) {
-        ctx.lineTo(mouseTrail[i].x, mouseTrail[i].y);
+    if (mouse.active) {
+      elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
+      
+      let path = findPath(mouse.x, mouse.y);
+
+      // THẮNG: Chuột không còn đường đi đến kho bánh mì
+      if (!path) {
+        gameRunning = false;
+        document.getElementById('status').innerText = `THẮNG! Vây kín chuột trong ${elapsedTime}s`;
+        document.getElementById('startBtn').disabled = false;
+        return;
       }
-      ctx.strokeStyle = '#00d2d3';
-      ctx.lineWidth = 4;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-    }
 
-    // Kiểm tra chém quả
-    for (let f of fruits) {
-      if (f.sliced) continue;
-      for (let p of mouseTrail) {
-        let dist = Math.hypot(f.x - p.x, f.y - p.y);
-        if (dist < f.radius) {
-          f.sliced = true;
-          score += 10;
-          scoreBoard.innerText = `Điểm: ${score}`;
-          break;
+      // Di chuyển chuột theo đường đi tìm được
+      if (path.length > 1) {
+        let targetX = path[1].x * CELL + CELL / 2;
+        let targetY = path[1].y * CELL + CELL / 2;
+
+        let dx = targetX - mouse.x;
+        let dy = targetY - mouse.y;
+        let dist = Math.hypot(dx, dy);
+
+        if (dist < mouse.speed) {
+          mouse.x = targetX;
+          mouse.y = targetY;
+        } else {
+          mouse.x += (dx / dist) * mouse.speed;
+          mouse.y += (dy / dist) * mouse.speed;
+        }
+      }
+
+      // THUA: Chuột chạm bánh mì (Hàng cuối)
+      if (Math.floor(mouse.y / CELL) >= ROWS - 1) {
+        gameRunning = false;
+        document.getElementById('status').innerText = `THUA! Chuột đã ăn bánh mì sau ${elapsedTime}s`;
+        document.getElementById('startBtn').disabled = false;
+      }
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Vẽ lưới & Bức tường 2 bên
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (grid[r][c] === 1) {
+          ctx.fillStyle = '#eccc68'; // Tấm chắn
+          ctx.fillRect(c * CELL + 1, r * CELL + 1, CELL - 2, CELL - 2);
+        } else if (grid[r][c] === 2) {
+          ctx.fillStyle = '#ffbe76'; // Kho Bánh mì
+          ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
         }
       }
     }
 
-    // Giảm dần đường vệt chém
-    if (Math.random() < 0.3 && mouseTrail.length > 0) {
-      mouseTrail.shift();
+    // Vẽ nhãn Bánh Mì ở đáy
+    ctx.fillStyle = '#84817a';
+    ctx.font = '16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText("🥖 KHO BÁNH MÌ 🥖", canvas.width / 2, canvas.height - 12);
+
+    // 2. Vẽ 3 cánh cửa phía trên
+    doors.forEach(d => {
+      ctx.fillStyle = (d === selectedDoor && gameRunning) ? '#ff4757' : '#74b9ff';
+      ctx.fillRect(d * CELL, 0, CELL, 10);
+    });
+
+    // 3. Vẽ Con Chuột
+    if (gameRunning) {
+      ctx.font = '24px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🐭', mouse.x, mouse.y);
     }
   }
 
   function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (let i = fruits.length - 1; i >= 0; i--) {
-      let f = fruits[i];
-      f.update();
-      f.draw();
-
-      if (f.y - f.radius > canvas.height) {
-        fruits.splice(i, 1);
-      }
-    }
-
-    handleInteractions();
+    update();
+    draw();
     requestAnimationFrame(gameLoop);
   }
 
-  setInterval(() => {
-    if (Math.random() < 0.5) spawnCluster();
-  }, 2500);
-
+  initGrid();
   gameLoop();
 </script>
 </body>
