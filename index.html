@@ -94,7 +94,7 @@
         <span class="name">Chó</span>
       </div>
     </div>
-    <button class="btn-start" onclick="requestFullScreenAndStart()">▶ CHƠI NGAY</button>
+    <button class="btn-start" onclick="onStartClick()">▶ CHƠI NGAY</button>
   </div>
 
   <!-- Widget đếm ngược tấm chắn -->
@@ -122,16 +122,15 @@
   const ctx = canvas.getContext('2d');
 
   const COLS = 10;
-  const TOTAL_ROWS = 15; // 2 hàng chuồng (10%), 12 hàng chơi (80%), 1 hàng bánh mì (10%)
+  const TOTAL_ROWS = 15; // 2 hàng chuồng (~10%), 12 hàng chơi (~80%), 1 hàng bánh mì (~10%)
   const CAGE_ROWS = 2;
-  const PLAY_ROWS = 12;
   let CELL = 40;
 
   let selectedEmoji = '🐭';
   let selectedName = 'Chuột';
 
   let grid = [];
-  let runner = { x: 0, y: 0, vx: 2, active: false, escaped: false };
+  let runner = { x: 0, y: 0, vx: 2, speed: 0, active: false, escaped: false };
   let doors = [1, 4, 8];
   let selectedDoor = 4;
   let gameRunning = false;
@@ -174,18 +173,16 @@
     canvas.height = CELL * TOTAL_ROWS;
   }
 
-  function requestFullScreenAndStart() {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) {
-      elem.requestFullscreen().catch(() => {});
-    } else if (elem.webkitRequestFullscreen) {
-      elem.webkitRequestFullscreen();
-    }
-    
-    setTimeout(() => {
-      resizeCanvas();
-      startGame();
-    }, 100);
+  function onStartClick() {
+    // Thử bật toàn màn hình an toàn, không chặn luồng chính
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    } catch (e) {}
+
+    resizeCanvas();
+    startGame();
   }
 
   window.addEventListener('resize', resizeCanvas);
@@ -198,12 +195,11 @@
       grid[TOTAL_ROWS - 1][c] = 2;
     }
 
-    // Tạo 3 chướng ngại vật ngẫu nhiên vị trí ngang ở 3 hàng dọc cách đều trong vùng chơi (80%)
-    // Vùng chơi nằm từ hàng index 2 đến 13
+    // Tạo 3 chướng ngại vật cố định ở 3 hàng dọc cách đều nhau trong vùng chơi
     const obstacleRows = [3, 7, 11];
     obstacleRows.forEach(r => {
       let randomCol = Math.floor(Math.random() * COLS);
-      grid[r][randomCol] = 1; // Chướng ngại vật cố định
+      grid[r][randomCol] = 1;
     });
   }
 
@@ -254,16 +250,17 @@
     
     selectedDoor = doors[Math.floor(Math.random() * doors.length)];
     
-    // Nhân vật chạy trong chuồng (10% trên)
+    // Nhân vật di chuyển qua lại trong chuồng (10% trên)
     runner = {
       x: canvas.width / 2,
       y: CELL * 0.8,
-      vx: (CELL * 0.1),
+      vx: Math.max(2, CELL * 0.08),
       speed: (canvas.height / 6) / 60,
       active: false,
       escaped: false
     };
 
+    // Sau 3 giây cửa mở và nhân vật chui ra
     setTimeout(() => {
       if (gameRunning) {
         runner.escaped = true;
@@ -324,9 +321,9 @@
     const c = Math.floor((e.clientX - rect.left) / CELL);
     const r = Math.floor((e.clientY - rect.top) / CELL);
 
-    // Chỉ đặt trong vùng giữa (80%)
+    // Chỉ đặt tấm chắn 1 ô trong vùng giữa (80%)
     if (r >= CAGE_ROWS && r < TOTAL_ROWS - 1 && grid[r][c] === 0) {
-      grid[r][c] = 1; // Đặt tấm chắn 1 ô
+      grid[r][c] = 1;
       startCooldown();
     }
   });
@@ -335,7 +332,7 @@
     if (!gameRunning) return;
 
     if (!runner.escaped) {
-      // Di chuyển qua lại trong chuồng
+      // Chạy qua chạy lại trong chuồng, chạm tường bật ngược lại
       runner.x += runner.vx;
       if (runner.x - CELL / 3 <= 0 || runner.x + CELL / 3 >= canvas.width) {
         runner.vx *= -1;
@@ -375,11 +372,10 @@
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Vẽ Chuồng (10% trên cùng)
+    // 1. Chuồng (10% trên)
     ctx.fillStyle = '#2d2d2d';
     ctx.fillRect(0, 0, canvas.width, CAGE_ROWS * CELL);
     
-    // Khung & Song sắt chuồng
     ctx.strokeStyle = '#555';
     ctx.lineWidth = 2;
     ctx.strokeRect(0, 0, canvas.width, CAGE_ROWS * CELL);
@@ -391,22 +387,20 @@
       ctx.stroke();
     }
 
-    // 3 Cửa thoát
+    // Cửa chuồng
     doors.forEach(d => {
       let isOpen = (d === selectedDoor && runner.escaped);
       ctx.fillStyle = isOpen ? '#2ed573' : (d === selectedDoor && gameRunning ? '#ff4757' : '#54a0ff');
       ctx.fillRect(d * CELL, CAGE_ROWS * CELL - 8, CELL, 8);
     });
 
-    // 2. Vẽ Bàn chơi (80% giữa) & Kho Bánh Mì (10% dưới)
+    // 2. Vùng chơi (80% giữa) & Bánh mì (10% dưới)
     for (let r = CAGE_ROWS; r < TOTAL_ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         if (grid[r][c] === 1) {
-          // Tấm chắn 1 ô
           ctx.fillStyle = '#eccc68';
           ctx.fillRect(c * CELL + 1, r * CELL + 1, CELL - 2, CELL - 2);
         } else if (grid[r][c] === 2) {
-          // Kho bánh mì
           ctx.fillStyle = '#ffbe76';
           ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
         }
@@ -419,7 +413,7 @@
     ctx.textAlign = 'center';
     ctx.fillText("🥖 KHO BÁNH MÌ 🥖", canvas.width / 2, canvas.height - CELL * 0.3);
 
-    // 3. Vẽ Nhân Vật
+    // 3. Nhân vật
     if (gameRunning) {
       ctx.font = `${CELL * 0.65}px serif`;
       ctx.textAlign = 'center';
