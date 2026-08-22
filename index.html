@@ -10,68 +10,81 @@
     
     #game-container { position: relative; width: 400px; }
     
-    #ui { 
-      display: flex; gap: 12px; align-items: center; justify-content: space-between; 
-      background: #1e1e1e; padding: 12px 16px; border-radius: 12px 12px 0 0; 
-      border: 1px solid #333; border-bottom: none;
+    #header-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #1e1e1e; padding: 10px 16px; border-radius: 12px 12px 0 0;
+      border: 1px solid #333; border-bottom: none; height: 50px;
     }
 
     /* Style nút bấm hiện đại */
     .btn {
-      padding: 10px 16px; font-size: 14px; font-weight: 700; border: none; border-radius: 8px;
+      padding: 8px 14px; font-size: 13px; font-weight: 700; border: none; border-radius: 8px;
       cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 10;
     }
-    .btn-primary { background: linear-gradient(135deg, #ff9f43, #ee5253); color: #fff; }
-    .btn-primary:hover { background: linear-gradient(135deg, #ffb142, #ff5252); transform: translateY(-1px); }
-    .btn-secondary { background: #333; color: #00d2d3; border: 1px solid #00d2d3; }
+    .btn-secondary { background: #252525; color: #00d2d3; border: 1px solid #00d2d3; }
     .btn-secondary:hover { background: #00d2d3; color: #121212; }
-    .btn:disabled { background: #444 !important; color: #888 !important; border: none !important; cursor: not-allowed; transform: none; box-shadow: none; }
+    
+    /* Nút Bắt đầu nổi giữa màn hình */
+    #start-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(3px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 20; border-radius: 12px;
+    }
+    .btn-start-center {
+      padding: 16px 32px; font-size: 20px; font-weight: 800;
+      background: linear-gradient(135deg, #ff9f43, #ee5253); color: #fff;
+      border: none; border-radius: 50px; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(238, 82, 83, 0.5); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-start-center:hover { transform: scale(1.08); box-shadow: 0 8px 25px rgba(238, 82, 83, 0.7); }
 
-    #status { text-align: center; font-size: 14px; font-weight: 600; color: #feca57; margin-bottom: 8px; }
+    #status { text-align: center; font-size: 13px; font-weight: 600; color: #feca57; width: 100%; }
 
     canvas { background: #222; border: 2px solid #333; border-radius: 0 0 12px 12px; display: block; }
 
-    /* Widget tấm chắn & Cooldown góc trên bên phải */
+    /* Widget tấm chắn góc trên bên phải */
     #shield-widget {
-      position: absolute; top: 15px; right: 15px; width: 54px; height: 54px;
+      position: absolute; top: 8px; right: 12px; width: 44px; height: 44px;
       background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(4px);
       border-radius: 50%; border: 2px solid #444;
       display: flex; align-items: center; justify-content: center; z-index: 10;
     }
-    #cooldown-svg { position: absolute; top: -2px; left: -2px; width: 54px; height: 54px; transform: rotate(-90deg); }
+    #cooldown-svg { position: absolute; top: -2px; left: -2px; width: 44px; height: 44px; transform: rotate(-90deg); }
     #cooldown-circle {
-      fill: none; stroke: #ff9f43; stroke-width: 4;
-      stroke-dasharray: 151; /* 2 * PI * r (r=24) */
+      fill: none; stroke: #ff9f43; stroke-width: 3.5;
+      stroke-dasharray: 120; /* 2 * PI * r (r=19) */
       stroke-dashoffset: 0; transition: stroke-dashoffset 0.05s linear;
     }
     #shield-preview {
       background: #eccc68; border-radius: 2px; transition: all 0.2s ease;
       box-shadow: 0 0 6px rgba(236, 204, 104, 0.6);
     }
-    /* Xem trước Ngang / Dọc */
-    .preview-vertical { width: 10px; height: 22px; }
-    .preview-horizontal { width: 22px; height: 10px; }
+    .preview-vertical { width: 8px; height: 18px; }
+    .preview-horizontal { width: 18px; height: 8px; }
   </style>
 </head>
 <body>
 
 <div id="game-container">
-  <div id="ui">
-    <button id="startBtn" class="btn btn-primary" onclick="startGame()">▶ Bắt đầu</button>
+  <!-- Thanh Header chứa nút Xoay (Góc trái) & Trạng thái (Giữa) -->
+  <div id="header-bar">
     <button id="rotateBtn" class="btn btn-secondary" onclick="toggleRotate()">🔄 Xoay</button>
-  </div>
-
-  <div style="background: #1e1e1e; padding-bottom: 6px;">
     <div id="status">Bấm Bắt đầu để chơi</div>
   </div>
 
-  <!-- Widget góc trên bên phải -->
+  <!-- Widget hình thu nhỏ góc trên bên phải -->
   <div id="shield-widget">
     <svg id="cooldown-svg">
-      <circle id="cooldown-circle" cx="27" cy="27" r="24"></circle>
+      <circle id="cooldown-circle" cx="22" cy="22" r="19"></circle>
     </svg>
     <div id="shield-preview" class="preview-vertical"></div>
+  </div>
+
+  <!-- Nút Bắt đầu nổi chính giữa màn hình -->
+  <div id="start-overlay">
+    <button class="btn-start-center" onclick="startGame()">▶ BẮT ĐẦU</button>
   </div>
 
   <canvas id="gameCanvas" width="400" height="600"></canvas>
@@ -95,11 +108,11 @@
 
   const COOLDOWN_TIME = 1500; // 1.5s
   let cooldownStart = 0;
-  let cooldownAnimFrame = null;
 
   const circle = document.getElementById('cooldown-circle');
   const preview = document.getElementById('shield-preview');
-  const maxDash = 151; // 2 * PI * 24
+  const overlay = document.getElementById('start-overlay');
+  const maxDash = 120; // 2 * PI * 19
 
   function initGrid() {
     grid = Array(ROWS).fill(0).map(() => Array(COLS).fill(0));
@@ -117,11 +130,10 @@
       let progress = (now - cooldownStart) / COOLDOWN_TIME;
       if (progress > 1) progress = 1;
       
-      // Vòng tròn quay lùi về 0 (quay hết 1 vòng)
       circle.style.strokeDashoffset = maxDash * (1 - progress);
 
       if (progress < 1) {
-        cooldownAnimFrame = requestAnimationFrame(updateCooldownRing);
+        requestAnimationFrame(updateCooldownRing);
       } else {
         circle.style.strokeDashoffset = 0;
         preview.style.opacity = "1";
@@ -153,18 +165,19 @@
     canPlace = true;
     preview.style.opacity = "1";
     circle.style.strokeDashoffset = 0;
+    overlay.style.display = 'none'; // Ẩn overlay khi chơi
     
     selectedDoor = doors[Math.floor(Math.random() * doors.length)];
-    //Tốc độ chuột (canvas.height / m (số giây))
+    
+    // Tốc độ chuột giảm 1 nửa: (canvas.height / 6) / 60
     mouse = {
       x: selectedDoor * CELL + CELL / 2,
       y: 0 + CELL / 2,
       active: false,
-      speed: (canvas.height / 5) / 60 
+      speed: (canvas.height / 6) / 60 
     };
 
-    document.getElementById('startBtn').disabled = true;
-    document.getElementById('status').innerText = "⏳ Chuột sẽ xuất hiện sau 3s...";
+    document.getElementById('status').innerText = "⏳ Chuột xuất hiện sau 3s...";
 
     setTimeout(() => {
       if (gameRunning) {
@@ -221,7 +234,7 @@
 
     if (valid) {
       cellsToBlock.forEach(([nr, nc]) => grid[nr][nc] = 1);
-      startCooldown(); // Bắt đầu đếm ngược 1.5s
+      startCooldown();
     }
   });
 
@@ -235,7 +248,7 @@
       if (!path) {
         gameRunning = false;
         document.getElementById('status').innerText = `🎉 THẮNG! Vây kín trong ${elapsedTime}s`;
-        document.getElementById('startBtn').disabled = false;
+        overlay.style.display = 'flex'; // Hiện lại nút Start
         return;
       }
 
@@ -258,8 +271,8 @@
 
       if (Math.floor(mouse.y / CELL) >= ROWS - 1) {
         gameRunning = false;
-        document.getElementById('status').innerText = `💀 THUA! Chuột đã ăn bánh mì (${elapsedTime}s)`;
-        document.getElementById('startBtn').disabled = false;
+        document.getElementById('status').innerText = `💀 THUA! (${elapsedTime}s)`;
+        overlay.style.display = 'flex'; // Hiện lại nút Start
       }
     }
   }
