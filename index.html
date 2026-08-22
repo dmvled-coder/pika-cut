@@ -3,112 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mewing vs Fanum Tax - Brainrot Edition</title>
+  <title>Bảo Vệ Kho Bánh Mì</title>
   <style>
-    * { box-sizing: border-box; font-family: 'Impact', 'Segoe UI', sans-serif; user-select: none; }
-    html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #0f0c20; color: #fff; touch-action: none; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+    html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #121212; color: #fff; touch-action: none; }
     
     #game-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    
-    #header-bar {
-      position: absolute; top: 0; left: 0; width: 100%; height: 50px;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(20, 15, 35, 0.9); padding: 0 16px; border-bottom: 2px solid #a55eea; z-index: 10;
-    }
 
-    .btn {
-      padding: 10px 18px; font-size: 14px; font-weight: 900; border: none; border-radius: 50px;
-      cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 12px rgba(165, 94, 234, 0.5); z-index: 15; letter-spacing: 1px;
-    }
-    .btn-secondary { background: #2d1b4e; color: #00d2d3; border: 2px solid #00d2d3; }
-    .btn-secondary:active { transform: scale(0.92); background: #00d2d3; color: #121212; }
-    
-    #rotateBtn { position: absolute; bottom: 25px; left: 20px; }
-
-    /* Overlay Bắt Đầu */
-    #start-overlay {
+    /* Màn hình Chọn Nhân Vật */
+    #select-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 12, 32, 0.85); backdrop-filter: blur(8px);
+      background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(8px);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 20;
     }
-    .brainrot-title { font-size: 32px; color: #ff007f; text-shadow: 0 0 10px #ff007f, 0 0 20px #a55eea; margin-bottom: 20px; text-align: center; }
-    
-    .btn-start-center {
-      padding: 16px 36px; font-size: 24px; font-weight: 900;
-      background: linear-gradient(135deg, #ff007f, #a55eea); color: #fff;
-      border: none; border-radius: 50px; cursor: pointer;
-      box-shadow: 0 6px 25px rgba(255, 0, 127, 0.6); transition: transform 0.2s;
+    .select-title { font-size: 24px; font-weight: 800; margin-bottom: 24px; color: #feca57; text-align: center; }
+    .char-options { display: flex; gap: 16px; margin-bottom: 30px; }
+    .char-card {
+      width: 80px; height: 90px; background: #252525; border: 2px solid #444; border-radius: 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s ease;
     }
-    .btn-start-center:hover { transform: scale(1.08) rotate(-2deg); }
+    .char-card .emoji { font-size: 36px; }
+    .char-card .name { font-size: 13px; font-weight: 700; margin-top: 6px; color: #ccc; }
+    .char-card.selected { border-color: #ff9f43; background: #3d2b1f; transform: scale(1.08); box-shadow: 0 0 15px rgba(255, 159, 67, 0.4); }
+    .char-card.selected .name { color: #ff9f43; }
+
+    .btn-start {
+      padding: 14px 40px; font-size: 20px; font-weight: 800;
+      background: linear-gradient(135deg, #ff9f43, #ee5253); color: #fff;
+      border: none; border-radius: 50px; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(238, 82, 83, 0.5); transition: transform 0.2s;
+    }
+    .btn-start:hover { transform: scale(1.05); }
 
     /* Modal Kết Quả */
     #result-modal {
       display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(10, 5, 20, 0.9); backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px);
       flex-direction: column; align-items: center; justify-content: center;
       z-index: 30; animation: fadeIn 0.3s ease;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
     .modal-card {
-      background: #1a102f; border: 3px solid #a55eea; border-radius: 20px;
+      background: #222; border: 2px solid #444; border-radius: 16px;
       padding: 24px 32px; text-align: center; width: 85%; max-width: 360px;
-      box-shadow: 0 0 30px rgba(165, 94, 234, 0.5);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     }
-    .result-title { font-size: 28px; font-weight: 900; margin-bottom: 8px; letter-spacing: 1px; }
-    .result-title.win { color: #00ff88; text-shadow: 0 0 10px #00ff88; }
-    .result-title.lose { color: #ff4757; text-shadow: 0 0 10px #ff4757; }
-    .result-time { font-size: 16px; color: #d1d8e0; margin-bottom: 20px; font-family: sans-serif; }
+    .result-title { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+    .result-title.win { color: #2ed573; }
+    .result-title.lose { color: #ff4757; }
+    .result-time { font-size: 15px; color: #ccc; margin-bottom: 20px; }
 
-    #status { text-align: center; font-size: 14px; font-weight: 700; color: #00d2d3; width: 100%; letter-spacing: 1px; }
+    canvas { background: #1a1a1a; display: block; }
 
-    canvas { background: #160d29; display: block; margin-top: 50px; border-bottom: 3px solid #a55eea; }
-
-    /* Widget đếm ngược */
+    /* Widget đếm ngược tấm chắn */
     #shield-widget {
       position: absolute; top: 50%; right: 15px; transform: translateY(-50%);
-      width: 50px; height: 50px; background: rgba(30, 20, 50, 0.5); backdrop-filter: blur(4px);
-      border-radius: 50%; border: 2px solid #a55eea; display: flex; align-items: center; justify-content: center;
-      z-index: 10; pointer-events: none;
+      width: 48px; height: 48px; background: rgba(30, 30, 30, 0.4); backdrop-filter: blur(2px);
+      border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.2);
+      display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none;
     }
-    #cooldown-svg { position: absolute; top: -2px; left: -2px; width: 50px; height: 50px; transform: rotate(-90deg); }
+    #cooldown-svg { position: absolute; top: -2px; left: -2px; width: 48px; height: 48px; transform: rotate(-90deg); }
     #cooldown-circle {
-      fill: none; stroke: #ff007f; stroke-width: 4;
-      stroke-dasharray: 138; stroke-dashoffset: 0; transition: stroke-dashoffset 0.05s linear;
+      fill: none; stroke: #ff9f43; stroke-width: 3.5;
+      stroke-dasharray: 132; stroke-dashoffset: 0; transition: stroke-dashoffset 0.05s linear;
     }
-    #shield-preview { background: #00d2d3; border-radius: 4px; box-shadow: 0 0 8px #00d2d3; transition: all 0.2s ease; }
-    .preview-vertical { width: 8px; height: 22px; }
-    .preview-horizontal { width: 22px; height: 8px; }
+    #shield-preview { width: 14px; height: 14px; background: #eccc68; border-radius: 2px; }
   </style>
 </head>
 <body>
 
 <div id="game-container">
-  <div id="header-bar">
-    <div id="status">BẮT ĐẦU ĐỂ CHẶN MEWING CAT</div>
+
+  <!-- Màn hình chọn nhân vật -->
+  <div id="select-overlay">
+    <div class="select-title">CHỌN NHÂN VẬT THÁCH THỨC</div>
+    <div class="char-options">
+      <div class="char-card selected" onclick="selectChar('🐭', 'Chuột', this)">
+        <span class="emoji">🐭</span>
+        <span class="name">Chuột</span>
+      </div>
+      <div class="char-card" onclick="selectChar('🐱', 'Mèo', this)">
+        <span class="emoji">🐱</span>
+        <span class="name">Mèo</span>
+      </div>
+      <div class="char-card" onclick="selectChar('🐶', 'Chó', this)">
+        <span class="emoji">🐶</span>
+        <span class="name">Chó</span>
+      </div>
+    </div>
+    <button class="btn-start" onclick="requestFullScreenAndStart()">▶ CHƠI NGAY</button>
   </div>
 
-  <button id="rotateBtn" class="btn btn-secondary" onclick="toggleRotate()">🔄 ROTATE (Space)</button>
-
+  <!-- Widget đếm ngược tấm chắn -->
   <div id="shield-widget">
     <svg id="cooldown-svg">
-      <circle id="cooldown-circle" cx="25" cy="25" r="22"></circle>
+      <circle id="cooldown-circle" cx="24" cy="24" r="21"></circle>
     </svg>
-    <div id="shield-preview" class="preview-vertical"></div>
+    <div id="shield-preview"></div>
   </div>
 
-  <div id="start-overlay">
-    <div class="brainrot-title">SKIBIDI BRAINROT 🗿</div>
-    <button class="btn-start-center" onclick="requestFullScreenAndStart()">▶ CHƠI NGAY</button>
-  </div>
-
+  <!-- Modal Kết Quả -->
   <div id="result-modal">
     <div class="modal-card">
       <div id="modal-title" class="result-title">THẮNG!</div>
       <div id="modal-time" class="result-time">Thời gian: 0.0s</div>
-      <button class="btn-start-center" style="font-size: 16px; padding: 12px 28px;" onclick="restartGame()">🔄 CHƠI LẠI</button>
+      <button class="btn-start" style="font-size: 16px; padding: 12px 28px;" onclick="showSelectScreen()">🔄 ĐỔI NHÂN VẬT</button>
     </div>
   </div>
 
@@ -118,17 +120,22 @@
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
-  
-  const COLS = 10, ROWS = 15;
+
+  const COLS = 10;
+  const TOTAL_ROWS = 15; // 2 hàng chuồng (10%), 12 hàng chơi (80%), 1 hàng bánh mì (10%)
+  const CAGE_ROWS = 2;
+  const PLAY_ROWS = 12;
   let CELL = 40;
 
-  let grid = []; 
-  let mouse = { x: 0, y: 0, active: false, speed: 0 };
+  let selectedEmoji = '🐭';
+  let selectedName = 'Chuột';
+
+  let grid = [];
+  let runner = { x: 0, y: 0, vx: 2, active: false, escaped: false };
   let doors = [1, 4, 8];
   let selectedDoor = 4;
   let gameRunning = false;
   let startTime = 0, elapsedTime = 0;
-  let isHorizontal = false; 
   let canPlace = false;
 
   const COOLDOWN_TIME = 1500;
@@ -136,22 +143,35 @@
 
   const circle = document.getElementById('cooldown-circle');
   const preview = document.getElementById('shield-preview');
-  const startOverlay = document.getElementById('start-overlay');
+  const selectOverlay = document.getElementById('select-overlay');
   const resultModal = document.getElementById('result-modal');
   const modalTitle = document.getElementById('modal-title');
   const modalTime = document.getElementById('modal-time');
-  const maxDash = 138;
+  const maxDash = 132;
+
+  function selectChar(emoji, name, el) {
+    selectedEmoji = emoji;
+    selectedName = name;
+    document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function showSelectScreen() {
+    resultModal.style.display = 'none';
+    selectOverlay.style.display = 'flex';
+    gameRunning = false;
+  }
 
   function resizeCanvas() {
     const availableWidth = window.innerWidth;
-    const availableHeight = window.innerHeight - 50;
-    
+    const availableHeight = window.innerHeight;
+
     const cellW = availableWidth / COLS;
-    const cellH = availableHeight / ROWS;
+    const cellH = availableHeight / TOTAL_ROWS;
     CELL = Math.min(cellW, cellH);
 
     canvas.width = CELL * COLS;
-    canvas.height = CELL * ROWS;
+    canvas.height = CELL * TOTAL_ROWS;
   }
 
   function requestFullScreenAndStart() {
@@ -170,21 +190,21 @@
 
   window.addEventListener('resize', resizeCanvas);
 
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-      e.preventDefault();
-      toggleRotate();
-    }
-  });
-
   function initGrid() {
-    grid = Array(ROWS).fill(0).map(() => Array(COLS).fill(0));
-    for(let c = 0; c < COLS; c++) grid[ROWS-1][c] = 2;
-  }
+    grid = Array(TOTAL_ROWS).fill(0).map(() => Array(COLS).fill(0));
 
-  function toggleRotate() {
-    isHorizontal = !isHorizontal;
-    preview.className = isHorizontal ? 'preview-horizontal' : 'preview-vertical';
+    // Hàng bánh mì dưới cùng
+    for (let c = 0; c < COLS; c++) {
+      grid[TOTAL_ROWS - 1][c] = 2;
+    }
+
+    // Tạo 3 chướng ngại vật ngẫu nhiên vị trí ngang ở 3 hàng dọc cách đều trong vùng chơi (80%)
+    // Vùng chơi nằm từ hàng index 2 đến 13
+    const obstacleRows = [3, 7, 11];
+    obstacleRows.forEach(r => {
+      let randomCol = Math.floor(Math.random() * COLS);
+      grid[r][randomCol] = 1; // Chướng ngại vật cố định
+    });
   }
 
   function updateCooldownRing() {
@@ -229,42 +249,41 @@
     preview.style.opacity = "1";
     circle.style.strokeDashoffset = 0;
     
-    startOverlay.style.display = 'none';
+    selectOverlay.style.display = 'none';
     resultModal.style.display = 'none';
     
     selectedDoor = doors[Math.floor(Math.random() * doors.length)];
     
-    mouse = {
-      x: selectedDoor * CELL + CELL / 2,
-      y: 0 + CELL / 2,
+    // Nhân vật chạy trong chuồng (10% trên)
+    runner = {
+      x: canvas.width / 2,
+      y: CELL * 0.8,
+      vx: (CELL * 0.1),
+      speed: (canvas.height / 6) / 60,
       active: false,
-      speed: (canvas.height / 6) / 60 
+      escaped: false
     };
-
-    document.getElementById('status').innerText = "🤫 MEWING CAT XUẤT HIỆN SAU 3S...";
 
     setTimeout(() => {
       if (gameRunning) {
-        mouse.active = true;
+        runner.escaped = true;
+        runner.x = selectedDoor * CELL + CELL / 2;
+        runner.y = CAGE_ROWS * CELL + CELL / 2;
+        runner.active = true;
         startTime = Date.now();
-        document.getElementById('status').innerText = "🗿 BLOCK MEWING CAT NGAY!";
       }
     }, 3000);
   }
 
   function showResult(isWin) {
     gameRunning = false;
-    modalTitle.innerText = isWin ? "🔥 +9999 RIZZ!" : "💀 L + RATIO + BRAINROT";
+    modalTitle.innerText = isWin ? "🎉 BẠN THẮNG!" : "💀 BẠN THUA!";
     modalTitle.className = `result-title ${isWin ? 'win' : 'lose'}`;
     modalTime.innerText = isWin 
-      ? `Bảo vệ thành công Pizza khỏi Fanum Tax trong ${elapsedTime}s` 
-      : `Bị Mewing Cat ăn mất Pizza sau ${elapsedTime}s`;
+      ? `Đã vây kín ${selectedName} trong ${elapsedTime}s` 
+      : `${selectedName} đã ăn mất bánh mì sau ${elapsedTime}s`;
     
     resultModal.style.display = 'flex';
-  }
-
-  function restartGame() {
-    startGame();
   }
 
   function findPath(startX, startY) {
@@ -277,7 +296,7 @@
       let path = queue.shift();
       let curr = path[path.length - 1];
 
-      if (curr.y === ROWS - 1) return path;
+      if (curr.y === TOTAL_ROWS - 1) return path;
 
       let neighbors = [
         {x: curr.x, y: curr.y + 1},
@@ -287,7 +306,7 @@
       ];
 
       for (let n of neighbors) {
-        if (n.x >= 0 && n.x < COLS && n.y >= 0 && n.y < ROWS) {
+        if (n.x >= 0 && n.x < COLS && n.y >= CAGE_ROWS && n.y < TOTAL_ROWS) {
           if (grid[n.y][n.x] !== 1 && !visited.has(`${n.x},${n.y}`)) {
             visited.add(`${n.x},${n.y}`);
             queue.push([...path, n]);
@@ -305,14 +324,9 @@
     const c = Math.floor((e.clientX - rect.left) / CELL);
     const r = Math.floor((e.clientY - rect.top) / CELL);
 
-    let cellsToBlock = isHorizontal ? [[r, c], [r, c + 1]] : [[r, c], [r + 1, c]];
-
-    let valid = cellsToBlock.every(([nr, nc]) => 
-      nr >= 0 && nr < ROWS - 1 && nc >= 0 && nc < COLS && grid[nr][nc] === 0
-    );
-
-    if (valid) {
-      cellsToBlock.forEach(([nr, nc]) => grid[nr][nc] = 1);
+    // Chỉ đặt trong vùng giữa (80%)
+    if (r >= CAGE_ROWS && r < TOTAL_ROWS - 1 && grid[r][c] === 0) {
+      grid[r][c] = 1; // Đặt tấm chắn 1 ô
       startCooldown();
     }
   });
@@ -320,9 +334,15 @@
   function update() {
     if (!gameRunning) return;
 
-    if (mouse.active) {
+    if (!runner.escaped) {
+      // Di chuyển qua lại trong chuồng
+      runner.x += runner.vx;
+      if (runner.x - CELL / 3 <= 0 || runner.x + CELL / 3 >= canvas.width) {
+        runner.vx *= -1;
+      }
+    } else if (runner.active) {
       elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
-      let path = findPath(mouse.x, mouse.y);
+      let path = findPath(runner.x, runner.y);
 
       if (!path) {
         showResult(true);
@@ -333,20 +353,20 @@
         let targetX = path[1].x * CELL + CELL / 2;
         let targetY = path[1].y * CELL + CELL / 2;
 
-        let dx = targetX - mouse.x;
-        let dy = targetY - mouse.y;
+        let dx = targetX - runner.x;
+        let dy = targetY - runner.y;
         let dist = Math.hypot(dx, dy);
 
-        if (dist < mouse.speed) {
-          mouse.x = targetX;
-          mouse.y = targetY;
+        if (dist < runner.speed) {
+          runner.x = targetX;
+          runner.y = targetY;
         } else {
-          mouse.x += (dx / dist) * mouse.speed;
-          mouse.y += (dy / dist) * mouse.speed;
+          runner.x += (dx / dist) * runner.speed;
+          runner.y += (dy / dist) * runner.speed;
         }
       }
 
-      if (Math.floor(mouse.y / CELL) >= ROWS - 1) {
+      if (Math.floor(runner.y / CELL) >= TOTAL_ROWS - 1) {
         showResult(false);
       }
     }
@@ -355,42 +375,56 @@
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    for (let r = 0; r < ROWS; r++) {
+    // 1. Vẽ Chuồng (10% trên cùng)
+    ctx.fillStyle = '#2d2d2d';
+    ctx.fillRect(0, 0, canvas.width, CAGE_ROWS * CELL);
+    
+    // Khung & Song sắt chuồng
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, canvas.width, CAGE_ROWS * CELL);
+    
+    for (let c = 1; c < COLS; c++) {
+      ctx.beginPath();
+      ctx.moveTo(c * CELL, 0);
+      ctx.lineTo(c * CELL, CAGE_ROWS * CELL - 8);
+      ctx.stroke();
+    }
+
+    // 3 Cửa thoát
+    doors.forEach(d => {
+      let isOpen = (d === selectedDoor && runner.escaped);
+      ctx.fillStyle = isOpen ? '#2ed573' : (d === selectedDoor && gameRunning ? '#ff4757' : '#54a0ff');
+      ctx.fillRect(d * CELL, CAGE_ROWS * CELL - 8, CELL, 8);
+    });
+
+    // 2. Vẽ Bàn chơi (80% giữa) & Kho Bánh Mì (10% dưới)
+    for (let r = CAGE_ROWS; r < TOTAL_ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         if (grid[r][c] === 1) {
-          // Khối tường Sigma
-          ctx.fillStyle = '#00d2d3';
+          // Tấm chắn 1 ô
+          ctx.fillStyle = '#eccc68';
           ctx.fillRect(c * CELL + 1, r * CELL + 1, CELL - 2, CELL - 2);
-          
-          ctx.fillStyle = '#121212';
-          ctx.font = `${CELL * 0.4}px sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('🗿', c * CELL + CELL / 2, r * CELL + CELL / 2);
         } else if (grid[r][c] === 2) {
-          // Khu vực Fanum Tax Pizza
-          ctx.fillStyle = '#ff007f';
+          // Kho bánh mì
+          ctx.fillStyle = '#ffbe76';
           ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
         }
       }
     }
 
-    ctx.fillStyle = '#fff';
-    ctx.font = `900 ${Math.max(10, CELL * 0.35)}px sans-serif`;
+    // Chữ Kho Bánh Mì
+    ctx.fillStyle = '#222';
+    ctx.font = `bold ${Math.max(10, CELL * 0.35)}px sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText("🍕 FANUM TAX PIZZA 🍕", canvas.width / 2, canvas.height - CELL * 0.3);
+    ctx.fillText("🥖 KHO BÁNH MÌ 🥖", canvas.width / 2, canvas.height - CELL * 0.3);
 
-    doors.forEach(d => {
-      ctx.fillStyle = (d === selectedDoor && gameRunning) ? '#ff007f' : '#a55eea';
-      ctx.fillRect(d * CELL, 0, CELL, 8);
-    });
-
+    // 3. Vẽ Nhân Vật
     if (gameRunning) {
-      // Mewing Cat / Skibidi
-      ctx.font = `${CELL * 0.75}px serif`;
+      ctx.font = `${CELL * 0.65}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('🐱', mouse.x, mouse.y);
+      ctx.fillText(selectedEmoji, runner.x, runner.y);
     }
   }
 
@@ -401,7 +435,6 @@
   }
 
   resizeCanvas();
-  initGrid();
   gameLoop();
 </script>
 </body>
