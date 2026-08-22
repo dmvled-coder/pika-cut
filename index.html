@@ -2,18 +2,18 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Ngăn Chuột Ăn Bánh Mì</title>
   <style>
-    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { margin: 0; background: #121212; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; touch-action: none; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+    html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #121212; color: #fff; touch-action: none; }
     
-    #game-container { position: relative; width: 400px; }
+    #game-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     
     #header-bar {
+      position: absolute; top: 0; left: 0; width: 100%; height: 50px;
       display: flex; align-items: center; justify-content: space-between;
-      background: #1e1e1e; padding: 10px 16px; border-radius: 12px 12px 0 0;
-      border: 1px solid #333; border-bottom: none; height: 50px;
+      background: rgba(30, 30, 30, 0.9); padding: 0 16px; border-bottom: 1px solid #333; z-index: 10;
     }
 
     .btn {
@@ -21,58 +21,62 @@
       cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center;
       box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 10;
     }
-    .btn-secondary { background: #252525; color: #00d2d3; border: 1px solid #00d2d3; }
+    .btn-secondary { background: #252525;   color: #00d2d3;   border: 1px solid #00d2d3;   
+  position: absolute;
+  bottom: 20px; /* Cánh đáy 20px */
+  left: 20px;   /* Cách trái 20px */
+  z-index: 100;}
     .btn-secondary:hover { background: #00d2d3; color: #121212; }
     
-    /* Overlay Màn hình bắt đầu */
+    /* Overlay Bắt Đầu */
     #start-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(3px);
+      background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 20; border-radius: 12px;
+      z-index: 20;
     }
     .btn-start-center {
-      padding: 16px 32px; font-size: 20px; font-weight: 800;
+      padding: 16px 36px; font-size: 22px; font-weight: 800;
       background: linear-gradient(135deg, #ff9f43, #ee5253); color: #fff;
       border: none; border-radius: 50px; cursor: pointer;
       box-shadow: 0 6px 20px rgba(238, 82, 83, 0.5); transition: transform 0.2s;
     }
     .btn-start-center:hover { transform: scale(1.08); }
 
-    /* Bảng Kết Quả Thắng / Thua Modal Popup */
+    /* Modal Kết Quả */
     #result-modal {
       display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px);
       flex-direction: column; align-items: center; justify-content: center;
-      z-index: 30; border-radius: 12px; animation: fadeIn 0.3s ease;
+      z-index: 30; animation: fadeIn 0.3s ease;
     }
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
     .modal-card {
       background: #222; border: 2px solid #444; border-radius: 16px;
-      padding: 24px 32px; text-align: center; width: 80%;
+      padding: 24px 32px; text-align: center; width: 85%; max-width: 360px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     }
     .result-title { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
     .result-title.win { color: #2ed573; }
     .result-title.lose { color: #ff4757; }
-    .result-time { font-size: 16px; color: #ccc; margin-bottom: 20px; }
+    .result-time { font-size: 15px; color: #ccc; margin-bottom: 20px; }
 
     #status { text-align: center; font-size: 13px; font-weight: 600; color: #feca57; width: 100%; }
 
-    canvas { background: #222; border: 2px solid #333; border-radius: 0 0 12px 12px; display: block; }
+    canvas { background: #222; display: block; margin-top: 50px; }
 
     /* Widget tấm chắn góc trên bên phải */
     #shield-widget {
-      position: absolute; top: 8px; right: 12px; width: 44px; height: 44px;
+      position: absolute; top: 4px; right: 12px; width: 42px; height: 42px;
       background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(4px);
       border-radius: 50%; border: 2px solid #444;
       display: flex; align-items: center; justify-content: center; z-index: 10;
     }
-    #cooldown-svg { position: absolute; top: -2px; left: -2px; width: 44px; height: 44px; transform: rotate(-90deg); }
+    #cooldown-svg { position: absolute; top: -2px; left: -2px; width: 42px; height: 42px; transform: rotate(-90deg); }
     #cooldown-circle {
       fill: none; stroke: #ff9f43; stroke-width: 3.5;
-      stroke-dasharray: 120; stroke-dashoffset: 0; transition: stroke-dashoffset 0.05s linear;
+      stroke-dasharray: 113; stroke-dashoffset: 0; transition: stroke-dashoffset 0.05s linear;
     }
     #shield-preview { background: #eccc68; border-radius: 2px; transition: all 0.2s ease; }
     .preview-vertical { width: 8px; height: 18px; }
@@ -89,17 +93,15 @@
 
   <div id="shield-widget">
     <svg id="cooldown-svg">
-      <circle id="cooldown-circle" cx="22" cy="22" r="19"></circle>
+      <circle id="cooldown-circle" cx="21" cy="21" r="18"></circle>
     </svg>
     <div id="shield-preview" class="preview-vertical"></div>
   </div>
 
-  <!-- Nút Bắt Đầu nổi -->
   <div id="start-overlay">
-    <button class="btn-start-center" onclick="startGame()">▶ BẮT ĐẦU</button>
+    <button class="btn-start-center" onclick="requestFullScreenAndStart()">▶ BẮT ĐẦU</button>
   </div>
 
-  <!-- Bảng Thông Báo Thắng / Thua -->
   <div id="result-modal">
     <div class="modal-card">
       <div id="modal-title" class="result-title">THẮNG!</div>
@@ -108,7 +110,7 @@
     </div>
   </div>
 
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <canvas id="gameCanvas"></canvas>
 </div>
 
 <script>
@@ -116,7 +118,7 @@
   const ctx = canvas.getContext('2d');
   
   const COLS = 10, ROWS = 15;
-  const CELL = canvas.width / COLS;
+  let CELL = 40;
 
   let grid = []; 
   let mouse = { x: 0, y: 0, active: false, speed: 0 };
@@ -127,7 +129,7 @@
   let isHorizontal = false; 
   let canPlace = false;
 
-  const COOLDOWN_TIME = 1000;
+  const COOLDOWN_TIME = 1500;
   let cooldownStart = 0;
 
   const circle = document.getElementById('cooldown-circle');
@@ -136,7 +138,38 @@
   const resultModal = document.getElementById('result-modal');
   const modalTitle = document.getElementById('modal-title');
   const modalTime = document.getElementById('modal-time');
-  const maxDash = 120;
+  const maxDash = 113;
+
+  // Tính lại kích thước Canvas theo màn hình
+  function resizeCanvas() {
+    const availableWidth = window.innerWidth;
+    const availableHeight = window.innerHeight - 50; // Trừ thanh header 50px
+    
+    // Giữ nguyên tỷ lệ 10x15
+    const cellW = availableWidth / COLS;
+    const cellH = availableHeight / ROWS;
+    CELL = Math.min(cellW, cellH);
+
+    canvas.width = CELL * COLS;
+    canvas.height = CELL * ROWS;
+  }
+
+  // Yêu cầu chế độ Fullscreen
+  function requestFullScreenAndStart() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(() => {});
+    } else if (elem.webkitRequestFullscreen) { /* Safari / iOS */
+      elem.webkitRequestFullscreen();
+    }
+    
+    setTimeout(() => {
+      resizeCanvas();
+      startGame();
+    }, 100);
+  }
+
+  window.addEventListener('resize', resizeCanvas);
 
   function initGrid() {
     grid = Array(ROWS).fill(0).map(() => Array(COLS).fill(0));
@@ -286,7 +319,7 @@
       let path = findPath(mouse.x, mouse.y);
 
       if (!path) {
-        showResult(true); // Báo Thắng
+        showResult(true);
         return;
       }
 
@@ -308,7 +341,7 @@
       }
 
       if (Math.floor(mouse.y / CELL) >= ROWS - 1) {
-        showResult(false); // Báo Thua
+        showResult(false);
       }
     }
   }
@@ -329,9 +362,9 @@
     }
 
     ctx.fillStyle = '#222';
-    ctx.font = 'bold 14px sans-serif';
+    ctx.font = `bold ${Math.max(10, CELL * 0.35)}px sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText("🥖 KHO BÁNH MÌ 🥖", canvas.width / 2, canvas.height - 12);
+    ctx.fillText("🥖 KHO BÁNH MÌ 🥖", canvas.width / 2, canvas.height - CELL * 0.3);
 
     doors.forEach(d => {
       ctx.fillStyle = (d === selectedDoor && gameRunning) ? '#ff4757' : '#54a0ff';
@@ -339,7 +372,7 @@
     });
 
     if (gameRunning) {
-      ctx.font = '24px serif';
+      ctx.font = `${CELL * 0.65}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('🐭', mouse.x, mouse.y);
@@ -352,6 +385,7 @@
     requestAnimationFrame(gameLoop);
   }
 
+  resizeCanvas();
   initGrid();
   gameLoop();
 </script>
