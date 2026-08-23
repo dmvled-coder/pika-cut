@@ -38,8 +38,7 @@
         .door { width: 85%; height: 28px; background: #7f8c8d; border: 2px solid #bdc3c7; border-bottom: none; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: #2c3e50; transition: all 0.3s; }
         .door.open { background: #e74c3c; border-color: #c0392b; color: #fff; height: 32px; }
         
-        /* Thay thế game-grid bằng game-canvas */
-        #game-canvas { height: 80vh; width: 100%; display: block; background-color: #556b2f; }
+        #game-canvas { height: 80vh; width: 100%; display: block; background-color: #556b2f; touch-action: none; }
 
         #bottom-zone { height: 10vh; background-color: #8e44ad; border-top: 3px solid #9b59b6; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; }
         .coop { display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 6px 16px; border-radius: 12px; width: 100%; height: 80%; }
@@ -112,7 +111,6 @@
             <div class="doors-grid-bar" id="doors-grid-bar"></div>
         </div>
 
-        <!-- HTML5 Canvas làm sân chơi -->
         <canvas id="game-canvas"></canvas>
         
         <!-- Bottom Zone -->
@@ -167,8 +165,8 @@
         let cellH = 0;
 
         function resizeCanvas() {
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
+            canvas.width = canvas.clientWidth || window.innerWidth;
+            canvas.height = canvas.clientHeight || (window.innerHeight * 0.8);
             cellW = canvas.width / COLS;
             cellH = canvas.height / ROWS;
         }
@@ -198,8 +196,11 @@
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('result-modal').style.display = 'none';
 
-            resizeCanvas();
-            initBoard();
+            // Tính toán kích thước ô ngay sau khi hiện màn hình chơi
+            setTimeout(() => {
+                resizeCanvas();
+                initBoard();
+            }, 50);
         }
 
         function initBoard() {
@@ -222,12 +223,12 @@
 
             if (hasObstacles) {
                 let count = 0;
-                let maxObstacles = Math.floor(COLS * ROWS * 0.03); 
+                let maxObstacles = Math.floor(COLS * ROWS * 0.10); // Rải 15 đá ngẫu nhiên
                 while (count < maxObstacles) {
                     let randR = Math.floor(Math.random() * (ROWS - 2)) + 1;
                     let randC = Math.floor(Math.random() * COLS);
                     if (grid[randR][randC] === 0) {
-                        grid[randR][randC] = 2; // 2: Chướng ngại vật (đá)
+                        grid[randR][randC] = 2; // 2: Đá
                         count++;
                     }
                 }
@@ -259,7 +260,6 @@
             shieldRegenTimer = setInterval(regenShield, 1000);
         }
 
-        // Sự kiện chạm/click đặt rào chắn trên Canvas
         canvas.addEventListener('pointerdown', (e) => {
             if (!gameActive || shieldInventory <= 0) return;
             const rect = canvas.getBoundingClientRect();
@@ -317,7 +317,6 @@
             return findShortestPath(beastPos) === null;
         }
 
-        // Vòng lặp tính toán và di chuyển mượt (Update)
         function update() {
             if (!gameActive) return;
 
@@ -336,7 +335,6 @@
                 let dy = targetY - beastPixel.y;
                 let dist = Math.hypot(dx, dy);
 
-                // Tính tốc độ pixel dựa vào stepIntervalMs
                 let speed = (cellH / (stepIntervalMs / 1000)) / 60;
 
                 if (dist <= speed) {
@@ -356,28 +354,28 @@
             }
         }
 
-        // Vẽ bàn chơi liên tục 60 FPS (Draw)
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Vẽ ô lưới
+            if (cellW <= 0 || cellH <= 0) return;
+
+            // 1. Vẽ đường lưới và các vật thể
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
-                    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+                    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+                    ctx.lineWidth = 1;
                     ctx.strokeRect(c * cellW, r * cellH, cellW, cellH);
 
                     if (grid[r][c] === 1) {
-                        // Rào chắn
+                        // Tấm chắn rào
                         ctx.fillStyle = '#d35400';
-                        ctx.beginPath();
-                        ctx.roundRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4, 6);
-                        ctx.fill();
+                        ctx.fillRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
                         ctx.strokeStyle = '#e67e22';
                         ctx.lineWidth = 2;
-                        ctx.stroke();
+                        ctx.strokeRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
                     } else if (grid[r][c] === 2) {
                         // Chướng ngại vật (đá)
-                        ctx.font = `${cellH * 0.5}px serif`;
+                        ctx.font = `${cellH * 0.55}px sans-serif`;
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
                         ctx.fillText('🪨', c * cellW + cellW / 2, r * cellH + cellH / 2);
@@ -385,16 +383,15 @@
                 }
             }
 
-            // 2. Vẽ thú dữ di chuyển mượt
+            // 2. Vẽ thú dữ di chuyển
             if (gameActive) {
-                ctx.font = `${cellH * 0.75}px serif`;
+                ctx.font = `${cellH * 0.75}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(selectedChar, beastPixel.x, beastPixel.y);
             }
         }
 
-        // Vòng lặp chính 60fps
         function gameLoop() {
             update();
             draw();
@@ -431,7 +428,7 @@
             document.getElementById('start-screen').style.display = 'flex';
         }
 
-        // Chạy vòng lặp render
+        // Kích hoạt vòng lặp chính
         gameLoop();
     </script>
 </body>
