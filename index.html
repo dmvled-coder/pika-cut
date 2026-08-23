@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ngăn Thú Dữ Tấn Công</title>
-   <style>
+    <style>
 * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
 body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1a1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; }
 #app-container { width: 100vw; height: 100vh; max-width: 500px; margin: 0 auto; position: relative; background-color: #2b3a42; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
@@ -25,16 +25,19 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
 .speed-btn.active { background: #e67e22; }
 .btn-start { width: 100%; padding: 16px; background: #27ae60; border: none; border-radius: 30px; color: white; font-size: 18px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); cursor: pointer; }
 .btn-start:active { transform: scale(0.98); }
-#header-zone { height: 10vh; background-color: #34495e; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 3px solid #2c3e50; position: relative; z-index: 10; }
-.header-left { display: flex; align-items: center; gap: 8px; }
-.selected-avatar { width: 40px; height: 40px; background: #2c3e50; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid #f1c40f; }
-.doors-container { display: flex; gap: 6px; }
-.door { width: 28px; height: 36px; background: #7f8c8d; border: 2px solid #bdc3c7; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: #2c3e50; transition: background 0.3s; }
-.door.open { background: #e74c3c; border-color: #c0392b; color: #fff; }
-.inventory-box { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 20px; border: 1px solid #f1c40f; }
-.shield-icon { width: 20px; height: 20px; background: #e67e22; border-radius: 3px; display: inline-block; box-shadow: 0 0 4px rgba(230, 126, 34, 0.8); }
-.shield-count { font-size: 16px; font-weight: bold; color: #f1c40f; }
-#game-grid { height: 80vh; background-color: #556b2f; display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(10, 1fr); position: relative; gap: 1px; background-image: radial-gradient(#4d612a 15%, transparent 16%), radial-gradient(#4d612a 15%, transparent 16%); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
+#header-zone { height: 10vh; background-color: #34495e; display: flex; flex-direction: column; justify-content: space-between; padding: 6px 0 0 0; border-bottom: 3px solid #2c3e50; position: relative; z-index: 10; }
+.hud-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
+.hud-info { display: flex; align-items: center; gap: 8px; }
+.selected-avatar { width: 32px; height: 32px; background: #2c3e50; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid #f1c40f; }
+.char-title-text { font-size: 14px; font-weight: bold; color: #f1c40f; }
+.inventory-box { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 16px; border: 1px solid #f1c40f; }
+.shield-icon { width: 16px; height: 16px; background: #e67e22; border-radius: 3px; display: inline-block; box-shadow: 0 0 4px rgba(230, 126, 34, 0.8); }
+.shield-count { font-size: 14px; font-weight: bold; color: #f1c40f; }
+.doors-grid-bar { display: grid; width: 100%; height: 32px; align-items: flex-end; }
+.door-slot { display: flex; justify-content: center; align-items: flex-end; height: 100%; }
+.door { width: 85%; height: 28px; background: #7f8c8d; border: 2px solid #bdc3c7; border-bottom: none; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: #2c3e50; transition: all 0.3s; }
+.door.open { background: #e74c3c; border-color: #c0392b; color: #fff; height: 32px; }
+#game-grid { height: 80vh; background-color: #556b2f; display: grid; position: relative; gap: 1px; background-image: radial-gradient(#4d612a 15%, transparent 16%), radial-gradient(#4d612a 15%, transparent 16%); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
 .cell { width: 100%; height: 100%; border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; position: relative; }
 .obstacle { background-color: #7f8c8d; border-radius: 4px; width: 85%; height: 85%; box-shadow: inset 2px 2px 0 #95a5a6, inset -2px -2px 0 #34495e; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .barrier { background-color: #d35400; border: 2px solid #e67e22; border-radius: 6px; width: 90%; height: 90%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); animation: popIn 0.15s ease-out; }
@@ -51,13 +54,12 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
 .result-title.lose { color: #e74c3c; }
 .result-time { font-size: 16px; margin-bottom: 20px; color: #ecf0f1; }
 .btn-restart { width: 100%; padding: 12px; background: #3498db; border: none; border-radius: 20px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
-</style>
+    </style>
 </head>
 <body>
 
     <div id="app-container">
-        
-        <!-- 1. MÀN HÌNH CHỌN / BẮT ĐẦU -->
+        <!-- 1. START SCREEN -->
         <div id="start-screen">
             <div class="title-box">
                 <h1>Ngăn Thú Dữ</h1>
@@ -102,28 +104,27 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
             <button class="btn-start" onclick="startGame()">VÀO GAME</button>
         </div>
 
-        <!-- 2. MÀN HÌNH GAME CHÍNH -->
-        <!-- Phần trên (10% chiều dọc): Header & Kho tấm chắn -->
+        <!-- 2. GAME SCREEN -->
         <div id="header-zone">
-            <div class="header-left">
-                <div class="selected-avatar" id="hud-avatar">🐕</div>
-                <div class="doors-container">
-                    <div class="door" id="door-0">Cửa 1</div>
-                    <div class="door" id="door-1">Cửa 2</div>
-                    <div class="door" id="door-2">Cửa 3</div>
+            <div class="hud-top-bar">
+                <div class="hud-info">
+                    <div class="selected-avatar" id="hud-avatar">🐕</div>
+                    <span class="char-title-text" id="hud-char-name">Chó</span>
+                </div>
+                <div class="inventory-box">
+                    <div class="shield-icon"></div>
+                    <span class="shield-count" id="shield-count">2</span>
                 </div>
             </div>
-            
-            <div class="inventory-box">
-                <div class="shield-icon"></div>
-                <span class="shield-count" id="shield-count">2</span>
-            </div>
+
+            <!-- Thanh chứa 3 cửa gióng thẳng hàng xuống các cột -->
+            <div class="doors-grid-bar" id="doors-grid-bar"></div>
         </div>
 
-        <!-- Phần giữa (80% chiều dọc): Lưới bản đồ playing field -->
+        <!-- Grid chính -->
         <div id="game-grid"></div>
 
-        <!-- Phần dưới (10% chiều dọc): Chuồng gà -->
+        <!-- Bottom Zone -->
         <div id="bottom-zone">
             <div class="coop">
                 <span class="coop-icon">🐔</span>
@@ -132,7 +133,7 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
             </div>
         </div>
 
-        <!-- 3. MÀN HÌNH KẾT QUẢ -->
+        <!-- Result Modal -->
         <div id="result-modal">
             <div class="result-box">
                 <div class="result-title" id="result-title">THẮNG LỢI!</div>
@@ -140,82 +141,89 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
                 <button class="btn-restart" onclick="resetToStart()">CHƠI LẠI</button>
             </div>
         </div>
-
     </div>
 
     <script>
-        // Cấu hình kích thước lưới
         const COLS = 7;
         const ROWS = 10;
+        
+        // Tự động tính vị trí cột 3 cửa dựa theo tổng số cột (COLS)
+        const spawnCols = [
+            Math.floor(COLS * 0.2), 
+            Math.floor(COLS * 0.5), 
+            Math.floor(COLS * 0.8)
+        ];
 
-        // Trạng thái Game
         let selectedChar = '🐕';
-        let stepIntervalMs = 600; // Mặc định 6s cho 10 bước (~600ms/bước)
+        let selectedCharName = 'Chó';
+        let stepIntervalMs = 600;
         let hasObstacles = true;
         
-        let grid = []; // 0: Trống, 1: Tấm chắn, 2: Đá cố định
+        let grid = [];
         let beastPos = { r: -1, c: -1 };
         let shieldInventory = 2;
         let gameActive = false;
         let startTime = 0;
-        let timerInterval = null;
         let beastMoveTimer = null;
         let shieldRegenTimer = null;
         let doorOpenTimeout = null;
 
         const gridEl = document.getElementById('game-grid');
         const shieldCountEl = document.getElementById('shield-count');
+        const doorsBarEl = document.getElementById('doors-grid-bar');
 
-        // Lựa chọn nhân vật
         function selectCharacter(emoji, name, element) {
             selectedChar = emoji;
+            selectedCharName = name;
             document.querySelectorAll('.char-card').forEach(card => card.classList.remove('selected'));
             element.classList.add('selected');
             document.getElementById('hud-avatar').textContent = emoji;
+            document.getElementById('hud-char-name').textContent = name;
         }
 
-        // Lựa chọn tốc độ
         function setSpeed(ms, element) {
             stepIntervalMs = ms;
             document.querySelectorAll('.speed-btn').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
         }
 
-        // Bắt đầu trò chơi & Gọi Fullscreen nếu có thể
         function startGame() {
-            // Yêu cầu Toàn màn hình (Toàn màn hình trình duyệt)
             const docElm = document.documentElement;
-            if (docElm.requestFullscreen) {
-                docElm.requestFullscreen().catch(() => {});
-            } else if (docElm.webkitRequestFullscreen) {
-                docElm.webkitRequestFullscreen();
-            }
+            if (docElm.requestFullscreen) docElm.requestFullscreen().catch(() => {});
+            else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
 
             hasObstacles = document.getElementById('chk-obstacles').checked;
 
-            // Ẩn màn hình Start
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('result-modal').style.display = 'none';
 
             initBoard();
         }
 
-        // Khởi tạo bàn chơi
         function initBoard() {
+            gridEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+            gridEl.style.gridTemplateRows = `repeat(${ROWS}, 1fr)`;
+            doorsBarEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+
+            // Dựng cấu trúc 3 Cửa gióng đúng cột
+            doorsBarEl.innerHTML = '';
+            for (let c = 0; c < COLS; c++) {
+                const doorSlot = document.createElement('div');
+                doorSlot.className = 'door-slot';
+                
+                const doorIdx = spawnCols.indexOf(c);
+                if (doorIdx !== -1) {
+                    doorSlot.innerHTML = `<div class="door" id="door-${doorIdx}">Cửa ${doorIdx + 1}</div>`;
+                }
+                doorsBarEl.appendChild(doorSlot);
+            }
+
             gridEl.innerHTML = '';
             grid = Array(ROWS).fill(0).map(() => Array(COLS).fill(0));
             shieldInventory = 2;
             shieldCountEl.textContent = shieldInventory;
             gameActive = false;
 
-            // Reset cửa
-            for(let i=0; i<3; i++) {
-                const d = document.getElementById(`door-${i}`);
-                d.classList.remove('open');
-                d.textContent = `Cửa ${i+1}`;
-            }
-
-            // Tạo các Cell trên lưới
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     const cell = document.createElement('div');
@@ -231,135 +239,106 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
                 }
             }
 
-            // Tạo chướng ngại vật ngẫu nhiên (nếu được bật)
             if (hasObstacles) {
                 let count = 0;
-                let maxObstacles = Math.floor(Math.random() * 4) + 5; // 5-8 vật cản
+                let maxObstacles = Math.floor(Math.random() * 4) + 5;
                 while (count < maxObstacles) {
-                    let randR = Math.floor(Math.random() * (ROWS - 2)) + 1; // Tránh hàng đầu và hàng cuối
+                    let randR = Math.floor(Math.random() * (ROWS - 2)) + 1;
                     let randC = Math.floor(Math.random() * COLS);
                     if (grid[randR][randC] === 0) {
-                        grid[randR][randC] = 2; // 2: Chướng ngại vật cố định
+                        grid[randR][randC] = 2;
                         renderCell(randR, randC, '<div class="obstacle">🪨</div>');
                         count++;
                     }
                 }
             }
 
-            // Mở cửa ngẫu nhiên sau 2 giây
             doorOpenTimeout = setTimeout(() => {
                 startSpawning();
             }, 2000);
         }
 
-        // Xử lý thả thú dữ từ cửa ngẫu nhiên
         function startSpawning() {
             const doorIndex = Math.floor(Math.random() * 3);
             const doorEl = document.getElementById(`door-${doorIndex}`);
-            doorEl.classList.add('open');
-            doorEl.textContent = 'MỞ!';
+            if (doorEl) {
+                doorEl.classList.add('open');
+                doorEl.textContent = 'MỞ!';
+            }
 
-            // Xác định vị trí xuất phát tương ứng ở hàng 0
-            // Cửa 1: Cột 1 | Cửa 2: Cột 3 | Cửa 3: Cột 5
-            const spawnCols = [1, 3, 5];
             const startCol = spawnCols[doorIndex];
-
             beastPos = { r: 0, c: startCol };
-            
-            // Xóa chướng ngại vật tại vị trí xuất phát nếu có
             grid[0][startCol] = 0;
 
             gameActive = true;
             startTime = Date.now();
 
-            // Render thú dữ
             renderBeast();
 
-            // Khởi chạy vòng lặp Game
             beastMoveTimer = setInterval(moveBeast, stepIntervalMs);
-            shieldRegenTimer = setInterval(regenShield, 1000); // 1 giây cộng 1 tấm chắn
+            shieldRegenTimer = setInterval(regenShield, 1000);
         }
 
-        // Đặt tấm chắn khi chạm màn hình
         function handleCellClick(r, c) {
-            if (!gameActive) return;
-            if (shieldInventory <= 0) return;
-            if (grid[r][c] !== 0) return; // Đã có vật cản/tấm chắn
-            if (beastPos.r === r && beastPos.c === c) return; // Không đặt đè lên con thú
+            if (!gameActive || shieldInventory <= 0) return;
+            if (grid[r][c] !== 0) return;
+            if (beastPos.r === r && beastPos.c === c) return;
 
-            // Đặt tấm chắn
-            grid[r][c] = 1; // 1: Tấm chắn người chơi
+            grid[r][c] = 1;
             renderCell(r, c, '<div class="barrier"></div>');
             
             shieldInventory--;
             shieldCountEl.textContent = shieldInventory;
 
-            // Ngay sau khi đặt tấm chắn, kiểm tra xem thú dữ có bị vây kín không
             if (checkTrapped()) {
                 endGame(true);
             }
         }
 
-        // Phục hồi tấm chắn mỗi 1 giây
         function regenShield() {
             if (!gameActive) return;
             shieldInventory++;
             shieldCountEl.textContent = shieldInventory;
         }
 
-        // Di chuyển thú dữ theo thuật toán BFS (Tìm đường ngắn nhất đến chuồng gà)
         function moveBeast() {
             if (!gameActive) return;
 
-            // Tìm đường đi tới hàng đáy (r = ROWS - 1)
             let path = findShortestPath(beastPos);
 
             if (!path || path.length <= 1) {
-                // Không tìm thấy đường đi -> Thú dữ đã bị vây kín hoàn toàn
                 endGame(true);
                 return;
             }
 
-            // Di chuyển sang bước tiếp theo trên con đường
             clearCell(beastPos.r, beastPos.c);
-            beastPos = path[1]; // Bước kế tiếp
+            beastPos = path[1];
 
-            // Kiểm tra xem thú dữ đã chạm tới đáy (Chuồng gà) chưa
             if (beastPos.r === ROWS - 1) {
                 renderBeast();
-                endGame(false); // Thua cuộc
+                endGame(false);
                 return;
             }
 
             renderBeast();
 
-            // Kiểm tra lại sau khi di chuyển xem có bị vây kẹt không
             if (checkTrapped()) {
                 endGame(true);
             }
         }
 
-        // Thuật toán tìm đường BFS
         function findShortestPath(start) {
             let queue = [[start]];
             let visited = Array(ROWS).fill(false).map(() => Array(COLS).fill(false));
             visited[start.r][start.c] = true;
 
-            const dirs = [
-                {r: 1, c: 0},  // Xuống
-                {r: 0, c: -1}, // Trái
-                {r: 0, c: 1},  // Phải
-                {r: -1, c: 0}  // Lên
-            ];
+            const dirs = [{r: 1, c: 0}, {r: 0, c: -1}, {r: 0, c: 1}, {r: -1, c: 0}];
 
             while (queue.length > 0) {
                 let path = queue.shift();
                 let curr = path[path.length - 1];
 
-                // Đã chạm đáy
-                if (curr.r === ROWS - 1) {
-                    return path;
-                }
+                if (curr.r === ROWS - 1) return path;
 
                 for (let d of dirs) {
                     let nr = curr.r + d.r;
@@ -373,17 +352,13 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
                     }
                 }
             }
-
-            return null; // Không tìm thấy đường đi
+            return null;
         }
 
-        // Kiểm tra thú dữ có bị bao vây kín không
         function checkTrapped() {
-            let path = findShortestPath(beastPos);
-            return path === null;
+            return findShortestPath(beastPos) === null;
         }
 
-        // Render tiện ích
         function renderCell(r, c, htmlContent) {
             const index = r * COLS + c;
             const cell = gridEl.children[index];
@@ -399,12 +374,9 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
         function renderBeast() {
             const index = beastPos.r * COLS + beastPos.c;
             const cell = gridEl.children[index];
-            if (cell) {
-                cell.innerHTML = `<div class="beast">${selectedChar}</div>`;
-            }
+            if (cell) cell.innerHTML = `<div class="beast">${selectedChar}</div>`;
         }
 
-        // Kết thúc trò chơi
         function endGame(isWin) {
             gameActive = false;
             clearInterval(beastMoveTimer);
@@ -412,10 +384,9 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
             clearTimeout(doorOpenTimeout);
 
             const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
-            
             const modal = document.getElementById('result-modal');
             const titleEl = document.getElementById('result-title');
-            const timeEl = document.getElementById('result-time');
+            const timeEl] = document.getElementById('result-time');
 
             if (isWin) {
                 titleEl.textContent = 'BẠN ĐÃ THẮNG!';
