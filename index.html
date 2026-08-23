@@ -38,7 +38,7 @@
         .door { width: 85%; height: 28px; background: #7f8c8d; border: 2px solid #bdc3c7; border-bottom: none; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: #2c3e50; transition: all 0.3s; }
         .door.open { background: #e74c3c; border-color: #c0392b; color: #fff; height: 32px; }
         
-        #game-canvas { height: 80vh; width: 100%; display: block; background-color: #556b2f; touch-action: none; }
+        #game-canvas { height: 80vh; width: 100%; display: block; background-color: #556b2f; cursor: pointer; }
 
         #bottom-zone { height: 10vh; background-color: #8e44ad; border-top: 3px solid #9b59b6; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; }
         .coop { display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 6px 16px; border-radius: 12px; width: 100%; height: 80%; }
@@ -165,8 +165,9 @@
         let cellH = 0;
 
         function resizeCanvas() {
-            canvas.width = canvas.clientWidth || window.innerWidth;
-            canvas.height = canvas.clientHeight || (window.innerHeight * 0.8);
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width || canvas.clientWidth || 300;
+            canvas.height = rect.height || canvas.clientHeight || 450;
             cellW = canvas.width / COLS;
             cellH = canvas.height / ROWS;
         }
@@ -189,18 +190,13 @@
         }
 
         function startGame() {
-            const docElm = document.documentElement;
-            if (docElm.requestFullscreen) docElm.requestFullscreen().catch(() => {});
-            else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-
+            // Đã loại bỏ Fullscreen API gây treo máy tính
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('result-modal').style.display = 'none';
 
-            // Tính toán kích thước ô ngay sau khi hiện màn hình chơi
-            setTimeout(() => {
-                resizeCanvas();
-                initBoard();
-            }, 50);
+            // Cập nhật lại kích thước Canvas chuẩn xác
+            resizeCanvas();
+            initBoard();
         }
 
         function initBoard() {
@@ -223,12 +219,12 @@
 
             if (hasObstacles) {
                 let count = 0;
-                let maxObstacles = Math.floor(COLS * ROWS * 0.10); // Rải 15 đá ngẫu nhiên
+                let maxObstacles = Math.floor(COLS * ROWS * 0.03); // Rải đá ngẫu nhiên
                 while (count < maxObstacles) {
                     let randR = Math.floor(Math.random() * (ROWS - 2)) + 1;
                     let randC = Math.floor(Math.random() * COLS);
                     if (grid[randR][randC] === 0) {
-                        grid[randR][randC] = 2; // 2: Đá
+                        grid[randR][randC] = 2;
                         count++;
                     }
                 }
@@ -257,27 +253,40 @@
             gameActive = true;
             startTime = Date.now();
 
+            if (shieldRegenTimer) clearInterval(shieldRegenTimer);
             shieldRegenTimer = setInterval(regenShield, 1000);
         }
 
-        canvas.addEventListener('pointerdown', (e) => {
+        // Đã hỗ trợ đồng thời cả Chuột (Desktop) và Cảm ứng (Điện thoại)
+        function handleInput(clientX, clientY) {
             if (!gameActive || shieldInventory <= 0) return;
             const rect = canvas.getBoundingClientRect();
-            const c = Math.floor((e.clientX - rect.left) / cellW);
-            const r = Math.floor((e.clientY - rect.top) / cellH);
+            const c = Math.floor((clientX - rect.left) / cellW);
+            const r = Math.floor((clientY - rect.top) / cellH);
 
             if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
             if (grid[r][c] !== 0) return;
             if (beastPos.r === r && beastPos.c === c) return;
 
-            grid[r][c] = 1; // 1: Tấm chắn
+            grid[r][c] = 1; // Đặt rào
             shieldInventory--;
             shieldCountEl.textContent = shieldInventory;
 
             if (checkTrapped()) {
                 endGame(true);
             }
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            handleInput(e.clientX, e.clientY);
         });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                handleInput(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
 
         function regenShield() {
             if (!gameActive) return;
@@ -359,7 +368,7 @@
 
             if (cellW <= 0 || cellH <= 0) return;
 
-            // 1. Vẽ đường lưới và các vật thể
+            // 1. Vẽ đường lưới và các ô vật thể
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     ctx.strokeStyle = 'rgba(0,0,0,0.15)';
@@ -367,15 +376,15 @@
                     ctx.strokeRect(c * cellW, r * cellH, cellW, cellH);
 
                     if (grid[r][c] === 1) {
-                        // Tấm chắn rào
+                        // Rào chắn
                         ctx.fillStyle = '#d35400';
                         ctx.fillRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
                         ctx.strokeStyle = '#e67e22';
                         ctx.lineWidth = 2;
                         ctx.strokeRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
                     } else if (grid[r][c] === 2) {
-                        // Chướng ngại vật (đá)
-                        ctx.font = `${cellH * 0.55}px sans-serif`;
+                        // Đá chướng ngại vật
+                        ctx.font = `${cellH * 0.55}px Arial, sans-serif`;
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
                         ctx.fillText('🪨', c * cellW + cellW / 2, r * cellH + cellH / 2);
@@ -383,9 +392,9 @@
                 }
             }
 
-            // 2. Vẽ thú dữ di chuyển
+            // 2. Vẽ thú dữ di chuyển mượt
             if (gameActive) {
-                ctx.font = `${cellH * 0.75}px sans-serif`;
+                ctx.font = `${cellH * 0.75}px Arial, sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(selectedChar, beastPixel.x, beastPixel.y);
@@ -428,7 +437,7 @@
             document.getElementById('start-screen').style.display = 'flex';
         }
 
-        // Kích hoạt vòng lặp chính
+        // Chạy vòng lặp render
         gameLoop();
     </script>
 </body>
