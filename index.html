@@ -37,25 +37,15 @@
         .door-slot { display: flex; justify-content: center; align-items: flex-end; height: 100%; }
         .door { width: 85%; height: 28px; background: #7f8c8d; border: 2px solid #bdc3c7; border-bottom: none; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: #2c3e50; transition: all 0.3s; }
         .door.open { background: #e74c3c; border-color: #c0392b; color: #fff; height: 32px; }
-        #game-grid { height: 80vh; background-color: #556b2f; display: grid; position: relative; gap: 1px; background-image: radial-gradient(#4d612a 15%, transparent 16%), radial-gradient(#4d612a 15%, transparent 16%); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
-        .cell { width: 100%; height: 100%; border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; position: relative; }
-        .obstacle { background-color: #7f8c8d; border-radius: 4px; width: 85%; height: 85%; box-shadow: inset 2px 2px 0 #95a5a6, inset -2px -2px 0 #34495e; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-        .barrier { background-color: #d35400; border: 2px solid #e67e22; border-radius: 6px; width: 90%; height: 90%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); animation: popIn 0.15s ease-out; }
-        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-       .beast { position: absolute;    top: 0;   left: 0;
-        width: calc(100% / 10);  /* Tự động bằng đúng chiều rộng 1 ô (với 10 cột) */
-        height: calc(100% / 15); /* Tự động bằng đúng chiều cao 1 ô (với 15 hàng) */
-    display: flex;     align-items: center;    justify-content: center;    font-size: 24px;     z-index: 10; 
-    /* Dòng quan trọng nhất: Giúp chuyển động trượt mượt mà */
-    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); 
-    pointer-events: none; /* Tránh cản trở lượt click vào các ô bên dưới */
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
-        }
+        
+        /* Thay thế game-grid bằng game-canvas */
+        #game-canvas { height: 80vh; width: 100%; display: block; background-color: #556b2f; }
+
         #bottom-zone { height: 10vh; background-color: #8e44ad; border-top: 3px solid #9b59b6; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; }
         .coop { display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 6px 16px; border-radius: 12px; width: 100%; height: 80%; }
         .coop-icon { font-size: 28px; }
         .coop-text { font-size: 14px; font-weight: bold; color: #f39c12; text-transform: uppercase; letter-spacing: 1px; }
-        #result-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.25); z-index: 200; display: none; flex-direction: column; align-items: center; jjustify-content: flex-start; padding: 20px; text-align: center; }
+        #result-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.25); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding: 20px; text-align: center; }
         .result-box { margin-top: 50px; background: rgba(44, 62, 80, 0.50); backdrop-filter: blur(4px); border-radius: 16px; padding: 30px 20px; width: 90%; max-width: 320px; border: 2px solid rgba(241, 196, 15, 0.8); box-shadow: 0 0 20px rgba(241, 196, 15, 0.3); }
         .result-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; }
         .result-title.win { color: #2ecc71; }
@@ -122,10 +112,8 @@
             <div class="doors-grid-bar" id="doors-grid-bar"></div>
         </div>
 
-        <!-- Grid chính -->
-        <div id="game-grid"></div>
-        
-        <div id="beast-node" class="beast" style="display: none;">🐕</div>
+        <!-- HTML5 Canvas làm sân chơi -->
+        <canvas id="game-canvas"></canvas>
         
         <!-- Bottom Zone -->
         <div id="bottom-zone">
@@ -163,16 +151,29 @@
         
         let grid = [];
         let beastPos = { r: -1, c: -1 };
+        let beastPixel = { x: 0, y: 0 };
         let shieldInventory = 2;
         let gameActive = false;
         let startTime = 0;
-        let beastMoveTimer = null;
         let shieldRegenTimer = null;
         let doorOpenTimeout = null;
 
-        const gridEl = document.getElementById('game-grid');
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
         const shieldCountEl = document.getElementById('shield-count');
         const doorsBarEl = document.getElementById('doors-grid-bar');
+
+        let cellW = 0;
+        let cellH = 0;
+
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            cellW = canvas.width / COLS;
+            cellH = canvas.height / ROWS;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
 
         function selectCharacter(emoji, name, element) {
             selectedChar = emoji;
@@ -197,75 +198,45 @@
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('result-modal').style.display = 'none';
 
+            resizeCanvas();
             initBoard();
         }
 
         function initBoard() {
-    // 1. Ẩn icon thú độc lập khi khởi tạo lại bàn chơi
-    const beastNode = document.getElementById('beast-node');
-    if (beastNode) beastNode.style.display = 'none';
-
-    // 2. Thiết lập kích thước lưới (COLS x ROWS)
-    gridEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
-    gridEl.style.gridTemplateRows = `repeat(${ROWS}, 1fr)`;
-    doorsBarEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
-
-    // 3. Tạo thanh chứa các cổng xuất hiện (Doors)
-    doorsBarEl.innerHTML = '';
-    for (let c = 0; c < COLS; c++) {
-        const doorSlot = document.createElement('div');
-        doorSlot.className = 'door-slot';
-        
-        const doorIdx = spawnCols.indexOf(c);
-        if (doorIdx !== -1) {
-            doorSlot.innerHTML = `<div class="door" id="door-${doorIdx}">Cửa ${doorIdx + 1}</div>`;
-        }
-        doorsBarEl.appendChild(doorSlot);
-    }
-
-    // 4. Xóa dữ liệu cũ và khởi tạo mảng lưới trống
-    gridEl.innerHTML = '';
-    grid = Array(ROWS).fill(0).map(() => Array(COLS).fill(0));
-    shieldInventory = 2;
-    shieldCountEl.textContent = shieldInventory;
-    gameActive = false;
-
-    // 5. Tạo các ô phần tử (Cells) trên màn hình game
-    for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.dataset.r = r;
-            cell.dataset.c = c;
-            cell.addEventListener('click', () => handleCellClick(r, c));
-            cell.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                handleCellClick(r, c);
-            });
-            gridEl.appendChild(cell);
-        }
-    }
-
-    // 6. Rải chướng ngại vật ngẫu nhiên trên bản đồ
-    if (hasObstacles) {
-        let count = 0;
-        let maxObstacles = Math.floor(COLS * ROWS * 0.03); // Số chướng ngại vật  =10x15x0.03
-        while (count < maxObstacles) {
-            let randR = Math.floor(Math.random() * (ROWS - 2)) + 1;
-            let randC = Math.floor(Math.random() * COLS);
-            if (grid[randR][randC] === 0) {
-                grid[randR][randC] = 2;
-                renderCell(randR, randC, '<div class="obstacle">🪨</div>');
-                count++;
+            doorsBarEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+            doorsBarEl.innerHTML = '';
+            for (let c = 0; c < COLS; c++) {
+                const doorSlot = document.createElement('div');
+                doorSlot.className = 'door-slot';
+                const doorIdx = spawnCols.indexOf(c);
+                if (doorIdx !== -1) {
+                    doorSlot.innerHTML = `<div class="door" id="door-${doorIdx}">Cửa ${doorIdx + 1}</div>`;
+                }
+                doorsBarEl.appendChild(doorSlot);
             }
-        }
-    }
 
-    // 7. Đếm ngược 2 giây để mở cửa ngẫu nhiên và thả thú
-    doorOpenTimeout = setTimeout(() => {
-        startSpawning();
-    }, 2000);
-}
+            grid = Array(ROWS).fill(0).map(() => Array(COLS).fill(0));
+            shieldInventory = 2;
+            shieldCountEl.textContent = shieldInventory;
+            gameActive = false;
+
+            if (hasObstacles) {
+                let count = 0;
+                let maxObstacles = Math.floor(COLS * ROWS * 0.03); 
+                while (count < maxObstacles) {
+                    let randR = Math.floor(Math.random() * (ROWS - 2)) + 1;
+                    let randC = Math.floor(Math.random() * COLS);
+                    if (grid[randR][randC] === 0) {
+                        grid[randR][randC] = 2; // 2: Chướng ngại vật (đá)
+                        count++;
+                    }
+                }
+            }
+
+            doorOpenTimeout = setTimeout(() => {
+                startSpawning();
+            }, 2000);
+        }
 
         function startSpawning() {
             const doorIndex = Math.floor(Math.random() * 3);
@@ -277,63 +248,41 @@
 
             const startCol = spawnCols[doorIndex];
             beastPos = { r: 0, c: startCol };
-            grid[0][startCol] = 0;
+            beastPixel = { 
+                x: startCol * cellW + cellW / 2, 
+                y: 0 * cellH + cellH / 2 
+            };
 
             gameActive = true;
             startTime = Date.now();
 
-            renderBeast();
-
-            beastMoveTimer = setInterval(moveBeast, stepIntervalMs);
             shieldRegenTimer = setInterval(regenShield, 1000);
         }
 
-        function handleCellClick(r, c) {
+        // Sự kiện chạm/click đặt rào chắn trên Canvas
+        canvas.addEventListener('pointerdown', (e) => {
             if (!gameActive || shieldInventory <= 0) return;
+            const rect = canvas.getBoundingClientRect();
+            const c = Math.floor((e.clientX - rect.left) / cellW);
+            const r = Math.floor((e.clientY - rect.top) / cellH);
+
+            if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
             if (grid[r][c] !== 0) return;
             if (beastPos.r === r && beastPos.c === c) return;
 
-            grid[r][c] = 1;
-            renderCell(r, c, '<div class="barrier"></div>');
-            
+            grid[r][c] = 1; // 1: Tấm chắn
             shieldInventory--;
             shieldCountEl.textContent = shieldInventory;
 
             if (checkTrapped()) {
                 endGame(true);
             }
-        }
+        });
 
         function regenShield() {
             if (!gameActive) return;
             shieldInventory++;
             shieldCountEl.textContent = shieldInventory;
-        }
-
-        function moveBeast() {
-            if (!gameActive) return;
-
-            let path = findShortestPath(beastPos);
-
-            if (!path || path.length <= 1) {
-                endGame(true);
-                return;
-            }
-
-            clearCell(beastPos.r, beastPos.c);
-            beastPos = path[1];
-
-            if (beastPos.r === ROWS - 1) {
-                renderBeast();
-                endGame(false);
-                return;
-            }
-
-            renderBeast();
-
-            if (checkTrapped()) {
-                endGame(true);
-            }
         }
 
         function findShortestPath(start) {
@@ -368,33 +317,92 @@
             return findShortestPath(beastPos) === null;
         }
 
-        function renderCell(r, c, htmlContent) {
-            const index = r * COLS + c;
-            const cell = gridEl.children[index];
-            if (cell) cell.innerHTML = htmlContent;
-        }
+        // Vòng lặp tính toán và di chuyển mượt (Update)
+        function update() {
+            if (!gameActive) return;
 
-        function clearCell(r, c) {
-        const index = r * COLS + c;
-        const cell = gridEl.children[index];
-        if (cell && grid[r][c] === 0) cell.innerHTML = '';
+            let path = findShortestPath(beastPos);
+
+            if (!path) {
+                endGame(true);
+                return;
             }
 
-        function renderBeast() {
-        const beastNode = document.getElementById('beast-node');
-        if (!beastNode) return;
-        beastNode.textContent = selectedChar;
-        beastNode.style.display = 'flex';
-        // Tính toán vị trí theo tỷ lệ phần trăm ô
-        const xPercent = beastPos.c * 100;
-        const yPercent = beastPos.r * 100;
-        // Dùng translate3d để ép GPU xử lý mượt 60fps
-        beastNode.style.transform = `translate3d(${xPercent}%, ${yPercent}%, 0)`;
+            if (path.length > 1) {
+                let targetX = path[1].c * cellW + cellW / 2;
+                let targetY = path[1].r * cellH + cellH / 2;
+
+                let dx = targetX - beastPixel.x;
+                let dy = targetY - beastPixel.y;
+                let dist = Math.hypot(dx, dy);
+
+                // Tính tốc độ pixel dựa vào stepIntervalMs
+                let speed = (cellH / (stepIntervalMs / 1000)) / 60;
+
+                if (dist <= speed) {
+                    beastPixel.x = targetX;
+                    beastPixel.y = targetY;
+                    beastPos = path[1];
+
+                    if (beastPos.r === ROWS - 1) {
+                        endGame(false);
+                    } else if (checkTrapped()) {
+                        endGame(true);
+                    }
+                } else {
+                    beastPixel.x += (dx / dist) * speed;
+                    beastPixel.y += (dy / dist) * speed;
+                }
+            }
+        }
+
+        // Vẽ bàn chơi liên tục 60 FPS (Draw)
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Vẽ ô lưới
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+                    ctx.strokeRect(c * cellW, r * cellH, cellW, cellH);
+
+                    if (grid[r][c] === 1) {
+                        // Rào chắn
+                        ctx.fillStyle = '#d35400';
+                        ctx.beginPath();
+                        ctx.roundRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4, 6);
+                        ctx.fill();
+                        ctx.strokeStyle = '#e67e22';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    } else if (grid[r][c] === 2) {
+                        // Chướng ngại vật (đá)
+                        ctx.font = `${cellH * 0.5}px serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('🪨', c * cellW + cellW / 2, r * cellH + cellH / 2);
+                    }
+                }
+            }
+
+            // 2. Vẽ thú dữ di chuyển mượt
+            if (gameActive) {
+                ctx.font = `${cellH * 0.75}px serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(selectedChar, beastPixel.x, beastPixel.y);
+            }
+        }
+
+        // Vòng lặp chính 60fps
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
         }
 
         function endGame(isWin) {
             gameActive = false;
-            clearInterval(beastMoveTimer);
             clearInterval(shieldRegenTimer);
             clearTimeout(doorOpenTimeout);
 
@@ -417,12 +425,14 @@
         }
 
         function resetToStart() {
-            clearInterval(beastMoveTimer);
             clearInterval(shieldRegenTimer);
             clearTimeout(doorOpenTimeout);
             document.getElementById('result-modal').style.display = 'none';
             document.getElementById('start-screen').style.display = 'flex';
         }
+
+        // Chạy vòng lặp render
+        gameLoop();
     </script>
 </body>
 </html>
