@@ -5,55 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ngăn Thú Dữ Tấn Công</title>
     <style>
-* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
-body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1a1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; }
-#app-container { width: 100vw; height: 100vh; max-width: 500px; margin: 0 auto; position: relative; background-color: #2b3a42; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-#start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e3c72, #2a5298); z-index: 100; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 30px 20px; text-align: center; }
-.title-box h1 { font-size: 26px; color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 8px; text-transform: uppercase; }
-.title-box p { font-size: 14px; color: #ecf0f1; opacity: 0.9; }
-.section-label { font-size: 16px; font-weight: bold; color: #e0e0e0; margin-bottom: 12px; }
-.character-select { display: flex; justify-content: space-around; width: 100%; gap: 10px; }
-.char-card { flex: 1; background: rgba(255, 255, 255, 0.1); border: 2px solid transparent; border-radius: 12px; padding: 12px 5px; cursor: pointer; transition: all 0.2s ease; }
-.char-card.selected { border-color: #f1c40f; background: rgba(241, 196, 15, 0.2); transform: scale(1.05); }
-.char-icon { font-size: 40px; display: block; margin-bottom: 5px; }
-.char-name { font-size: 14px; font-weight: bold; }
-.options-box { background: rgba(0, 0, 0, 0.25); padding: 15px; border-radius: 12px; width: 100%; }
-.option-group { margin-bottom: 12px; }
-.option-group:last-child { margin-bottom: 0; }
-.speed-btn-group { display: flex; gap: 8px; }
-.speed-btn { flex: 1; padding: 8px 0; background: #34495e; border: none; border-radius: 6px; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; }
-.speed-btn.active { background: #e67e22; }
-.btn-start { width: 100%; padding: 16px; background: #27ae60; border: none; border-radius: 30px; color: white; font-size: 18px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); cursor: pointer; }
-.btn-start:active { transform: scale(0.98); }
-#header-zone { height: 10vh; background-color: #34495e; display: flex; flex-direction: column; justify-content: space-between; padding: 6px 0 0 0; border-bottom: 3px solid #2c3e50; position: relative; z-index: 10; }
-.hud-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
-.hud-info { display: flex; align-items: center; gap: 8px; }
-.selected-avatar { width: 32px; height: 32px; background: #2c3e50; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid #f1c40f; }
-.char-title-text { font-size: 14px; font-weight: bold; color: #f1c40f; }
-.inventory-box { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 16px; border: 1px solid #f1c40f; }
-.shield-icon { width: 16px; height: 16px; background: #e67e22; border-radius: 3px; display: inline-block; box-shadow: 0 0 4px rgba(230, 126, 34, 0.8); }
-.shield-count { font-size: 14px; font-weight: bold; color: #f1c40f; }
-.doors-grid-bar { display: grid; width: 100%; height: 32px; align-items: flex-end; }
-.door-slot { display: flex; justify-content: center; align-items: flex-end; height: 100%; }
-.door { width: 85%; height: 28px; background: #7f8c8d; border: 2px solid #bdc3c7; border-bottom: none; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: #2c3e50; transition: all 0.3s; }
-.door.open { background: #e74c3c; border-color: #c0392b; color: #fff; height: 32px; }
-#game-grid { height: 80vh; background-color: #556b2f; display: grid; position: relative; gap: 1px; background-image: radial-gradient(#4d612a 15%, transparent 16%), radial-gradient(#4d612a 15%, transparent 16%); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
-.cell { width: 100%; height: 100%; border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; position: relative; }
-.obstacle { background-color: #7f8c8d; border-radius: 4px; width: 85%; height: 85%; box-shadow: inset 2px 2px 0 #95a5a6, inset -2px -2px 0 #34495e; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-.barrier { background-color: #d35400; border: 2px solid #e67e22; border-radius: 6px; width: 90%; height: 90%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); animation: popIn 0.15s ease-out; }
-@keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-.beast { font-size: 28px; z-index: 5; transition: all 0.3s linear; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4)); }
-#bottom-zone { height: 10vh; background-color: #8e44ad; border-top: 3px solid #9b59b6; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; }
-.coop { display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 6px 16px; border-radius: 12px; width: 100%; height: 80%; }
-.coop-icon { font-size: 28px; }
-.coop-text { font-size: 14px; font-weight: bold; color: #f39c12; text-transform: uppercase; letter-spacing: 1px; }
-#result-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-.result-box { background: #2c3e50; border-radius: 16px; padding: 30px 20px; width: 90%; max-width: 320px; border: 2px solid #f1c40f; box-shadow: 0 0 20px rgba(241, 196, 15, 0.3); }
-.result-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; }
-.result-title.win { color: #2ecc71; }
-.result-title.lose { color: #e74c3c; }
-.result-time { font-size: 16px; margin-bottom: 20px; color: #ecf0f1; }
-.btn-restart { width: 100%; padding: 12px; background: #3498db; border: none; border-radius: 20px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1a1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; }
+        #app-container { width: 100vw; height: 100vh; max-width: 500px; margin: 0 auto; position: relative; background-color: #2b3a42; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e3c72, #2a5298); z-index: 100; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 30px 20px; text-align: center; }
+        .title-box h1 { font-size: 26px; color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 8px; text-transform: uppercase; }
+        .title-box p { font-size: 14px; color: #ecf0f1; opacity: 0.9; }
+        .section-label { font-size: 16px; font-weight: bold; color: #e0e0e0; margin-bottom: 12px; }
+        .character-select { display: flex; justify-content: space-around; width: 100%; gap: 10px; }
+        .char-card { flex: 1; background: rgba(255, 255, 255, 0.1); border: 2px solid transparent; border-radius: 12px; padding: 12px 5px; cursor: pointer; transition: all 0.2s ease; }
+        .char-card.selected { border-color: #f1c40f; background: rgba(241, 196, 15, 0.2); transform: scale(1.05); }
+        .char-icon { font-size: 40px; display: block; margin-bottom: 5px; }
+        .char-name { font-size: 14px; font-weight: bold; }
+        .options-box { background: rgba(0, 0, 0, 0.25); padding: 15px; border-radius: 12px; width: 100%; }
+        .option-group { margin-bottom: 12px; }
+        .option-group:last-child { margin-bottom: 0; }
+        .speed-btn-group { display: flex; gap: 8px; }
+        .speed-btn { flex: 1; padding: 8px 0; background: #34495e; border: none; border-radius: 6px; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .speed-btn.active { background: #e67e22; }
+        .btn-start { width: 100%; padding: 16px; background: #27ae60; border: none; border-radius: 30px; color: white; font-size: 18px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); cursor: pointer; }
+        .btn-start:active { transform: scale(0.98); }
+        #header-zone { height: 10vh; background-color: #34495e; display: flex; flex-direction: column; justify-content: space-between; padding: 6px 0 0 0; border-bottom: 3px solid #2c3e50; position: relative; z-index: 10; }
+        .hud-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
+        .hud-info { display: flex; align-items: center; gap: 8px; }
+        .selected-avatar { width: 32px; height: 32px; background: #2c3e50; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid #f1c40f; }
+        .char-title-text { font-size: 14px; font-weight: bold; color: #f1c40f; }
+        .inventory-box { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 16px; border: 1px solid #f1c40f; }
+        .shield-icon { width: 16px; height: 16px; background: #e67e22; border-radius: 3px; display: inline-block; box-shadow: 0 0 4px rgba(230, 126, 34, 0.8); }
+        .shield-count { font-size: 14px; font-weight: bold; color: #f1c40f; }
+        .doors-grid-bar { display: grid; width: 100%; height: 32px; align-items: flex-end; }
+        .door-slot { display: flex; justify-content: center; align-items: flex-end; height: 100%; }
+        .door { width: 85%; height: 28px; background: #7f8c8d; border: 2px solid #bdc3c7; border-bottom: none; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: #2c3e50; transition: all 0.3s; }
+        .door.open { background: #e74c3c; border-color: #c0392b; color: #fff; height: 32px; }
+        #game-grid { height: 80vh; background-color: #556b2f; display: grid; position: relative; gap: 1px; background-image: radial-gradient(#4d612a 15%, transparent 16%), radial-gradient(#4d612a 15%, transparent 16%); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
+        .cell { width: 100%; height: 100%; border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; position: relative; }
+        .obstacle { background-color: #7f8c8d; border-radius: 4px; width: 85%; height: 85%; box-shadow: inset 2px 2px 0 #95a5a6, inset -2px -2px 0 #34495e; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .barrier { background-color: #d35400; border: 2px solid #e67e22; border-radius: 6px; width: 90%; height: 90%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); animation: popIn 0.15s ease-out; }
+        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        .beast { font-size: 28px; z-index: 5; transition: all 0.3s linear; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4)); }
+        #bottom-zone { height: 10vh; background-color: #8e44ad; border-top: 3px solid #9b59b6; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; }
+        .coop { display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 6px 16px; border-radius: 12px; width: 100%; height: 80%; }
+        .coop-icon { font-size: 28px; }
+        .coop-text { font-size: 14px; font-weight: bold; color: #f39c12; text-transform: uppercase; letter-spacing: 1px; }
+        #result-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .result-box { background: #2c3e50; border-radius: 16px; padding: 30px 20px; width: 90%; max-width: 320px; border: 2px solid #f1c40f; box-shadow: 0 0 20px rgba(241, 196, 15, 0.3); }
+        .result-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; }
+        .result-title.win { color: #2ecc71; }
+        .result-title.lose { color: #e74c3c; }
+        .result-time { font-size: 16px; margin-bottom: 20px; color: #ecf0f1; }
+        .btn-restart { width: 100%; padding: 12px; background: #3498db; border: none; border-radius: 20px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -117,7 +117,6 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
                 </div>
             </div>
 
-            <!-- Thanh chứa 3 cửa gióng thẳng hàng xuống các cột -->
             <div class="doors-grid-bar" id="doors-grid-bar"></div>
         </div>
 
@@ -147,7 +146,6 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
         const COLS = 7;
         const ROWS = 10;
         
-        // Tự động tính vị trí cột 3 cửa dựa theo tổng số cột (COLS)
         const spawnCols = [
             Math.floor(COLS * 0.2), 
             Math.floor(COLS * 0.5), 
@@ -205,7 +203,6 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
             gridEl.style.gridTemplateRows = `repeat(${ROWS}, 1fr)`;
             doorsBarEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
 
-            // Dựng cấu trúc 3 Cửa gióng đúng cột
             doorsBarEl.innerHTML = '';
             for (let c = 0; c < COLS; c++) {
                 const doorSlot = document.createElement('div');
@@ -386,7 +383,7 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1
             const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
             const modal = document.getElementById('result-modal');
             const titleEl = document.getElementById('result-title');
-            const timeEl] = document.getElementById('result-time');
+            const timeEl = document.getElementById('result-time');
 
             if (isWin) {
                 titleEl.textContent = 'BẠN ĐÃ THẮNG!';
