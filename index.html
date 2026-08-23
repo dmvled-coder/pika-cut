@@ -249,7 +249,7 @@
     // 6. Rải chướng ngại vật ngẫu nhiên trên bản đồ
     if (hasObstacles) {
         let count = 0;
-        let maxObstacles = Math.floor(COLS * ROWS * 0.10); // Khoảng 15 chướng ngại vật cho bàn 10x15
+        let maxObstacles = Math.floor(COLS * ROWS * 0.03); // Số chướng ngại vật  =10x15x0.03
         while (count < maxObstacles) {
             let randR = Math.floor(Math.random() * (ROWS - 2)) + 1;
             let randC = Math.floor(Math.random() * COLS);
