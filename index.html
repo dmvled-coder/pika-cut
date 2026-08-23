@@ -93,12 +93,6 @@
                         <button class="speed-btn" onclick="setSpeed(250, this)">Nhanh (2.5s)</button>
                     </div>
                 </div>
-                <div class="option-group" style="margin-top: 10px;">
-                    <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <input type="checkbox" id="chk-obstacles" checked style="width: 16px; height: 16px;">
-                        <span>Thêm chướng ngại vật ngẫu nhiên</span>
-                    </label>
-                </div>
             </div>
 
             <button class="btn-start" onclick="startGame()">VÀO GAME</button>
@@ -189,8 +183,6 @@
             const docElm = document.documentElement;
             if (docElm.requestFullscreen) docElm.requestFullscreen().catch(() => {});
             else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-
-            hasObstacles = document.getElementById('chk-obstacles').checked;
 
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('result-modal').style.display = 'none';
