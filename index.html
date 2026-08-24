@@ -2,67 +2,64 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ngăn Thú Dữ Tấn Công</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
-        body, html { width: 100%; height: 100vh; height: 100dvh; overflow: hidden; background-color: #1a1a1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; }
-        #app-container { width: 100vw; height: 100vh; height: 100dvh; max-width: 500px; margin: 0 auto; position: relative; background-color: #2b3a42; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e3c72, #2a5298); z-index: 100; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 20px; text-align: center; }
-        .title-box h1 { font-size: 24px; color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 4px; text-transform: uppercase; }
-        .title-box p { font-size: 13px; color: #ecf0f1; opacity: 0.9; }
-        .section-label { font-size: 14px; font-weight: bold; color: #e0e0e0; margin-bottom: 8px; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1a1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; }
+        #app-container { width: 100vw; height: 100vh; max-width: 500px; margin: 0 auto; position: relative; background-color: #2b3a42; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e3c72, #2a5298); z-index: 100; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 30px 20px; text-align: center; }
+        .title-box h1 { font-size: 26px; color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 8px; text-transform: uppercase; }
+        .title-box p { font-size: 14px; color: #ecf0f1; opacity: 0.9; }
+        .section-label { font-size: 16px; font-weight: bold; color: #e0e0e0; margin-bottom: 12px; }
         
+        /* Hiển thị danh sách nhân vật (Không chọn) */
         .character-display { display: flex; justify-content: space-around; width: 100%; gap: 10px; }
-        .char-card-show { flex: 1; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(241, 196, 15, 0.4); border-radius: 12px; padding: 10px 5px; }
-        .char-img-preview { width: 40px; height: 40px; object-fit: contain; margin-bottom: 5px; }
-        .char-name { font-size: 13px; font-weight: bold; display: block; }
+        .char-card-show { flex: 1; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(241, 196, 15, 0.4); border-radius: 12px; padding: 12px 5px; }
+        .char-img-preview { width: 45px; height: 45px; object-fit: contain; margin-bottom: 5px; }
+        .char-name { font-size: 14px; font-weight: bold; display: block; }
 
-        .options-box { background: rgba(0, 0, 0, 0.25); padding: 12px; border-radius: 12px; width: 100%; }
-        .option-group { margin-bottom: 8px; }
+        .options-box { background: rgba(0, 0, 0, 0.25); padding: 15px; border-radius: 12px; width: 100%; }
+        .option-group { margin-bottom: 12px; }
         .option-group:last-child { margin-bottom: 0; }
         .speed-btn-group { display: flex; gap: 8px; }
-        .speed-btn { flex: 1; padding: 8px 0; background: #34495e; border: none; border-radius: 6px; color: #fff; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .speed-btn { flex: 1; padding: 8px 0; background: #34495e; border: none; border-radius: 6px; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; }
         .speed-btn.active { background: #e67e22; }
-        .btn-start { width: 100%; padding: 14px; background: #27ae60; border: none; border-radius: 30px; color: white; font-size: 16px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); cursor: pointer; }
+        .btn-start { margin-bottom: 50px; width: 100%; padding: 16px; background: #27ae60; border: none; border-radius: 30px; color: white; font-size: 18px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); cursor: pointer; }
         .btn-start:active { transform: scale(0.98); }
-
-        #header-zone { height: 10%; min-height: 60px; background-color: #34495e; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0 0 0; border-bottom: 3px solid #2c3e50; position: relative; z-index: 10; flex-shrink: 0; }
+        #header-zone { height: 10vh; background-color: #34495e; display: flex; flex-direction: column; justify-content: space-between; padding: 6px 0 0 0; border-bottom: 3px solid #2c3e50; position: relative; z-index: 10; }
         .hud-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
         .hud-info { display: flex; align-items: center; gap: 8px; }
-        .selected-avatar { width: 30px; height: 30px; background: #2c3e50; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #f1c40f; overflow: hidden; }
+        .selected-avatar { width: 34px; height: 34px; background: #2c3e50; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #f1c40f; overflow: hidden; }
         .selected-avatar img { width: 80%; height: 80%; object-fit: contain; }
-        .char-title-text { font-size: 13px; font-weight: bold; color: #f1c40f; }
+        .char-title-text { font-size: 14px; font-weight: bold; color: #f1c40f; }
         .inventory-box { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 16px; border: 1px solid #f1c40f; }
-        
-        /* Thay icon khiên nhỏ ở HUD góc trên bằng hình ảnh tuỳ chọn */
         .shield-icon { width: 16px; height: 16px; object-fit: contain; }
-        
-        .shield-count { font-size: 13px; font-weight: bold; color: #f1c40f; }
-        .doors-grid-bar { display: grid; width: 100%; height: 26px; align-items: flex-end; }
+        .shield-count { font-size: 14px; font-weight: bold; color: #f1c40f; }
+        .doors-grid-bar { display: grid; width: 100%; height: 32px; align-items: flex-end; }
         .door-slot { display: flex; justify-content: center; align-items: flex-end; height: 100%; }
-        .door { width: 85%; height: 22px; background: #7f8c8d; border: 2px solid #bdc3c7; border-bottom: none; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: #2c3e50; transition: all 0.3s; }
-        .door.open { background: #e74c3c; border-color: #c0392b; color: #fff; height: 26px; }
+        .door { width: 85%; height: 28px; background: #7f8c8d; border: 2px solid #bdc3c7; border-bottom: none; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: #2c3e50; transition: all 0.3s; }
+        .door.open { background: #e74c3c; border-color: #c0392b; color: #fff; height: 32px; }
         
-        #game-canvas { flex-grow: 1; width: 100%; display: block; background-color: #556b2f; cursor: pointer; }
+        #game-canvas { height: 80vh; width: 100%; display: block; background-color: #556b2f; cursor: pointer; }
 
-        #bottom-zone { height: 10%; min-height: 50px; background-color: #8e44ad; border-top: 3px solid #9b59b6; display: flex; align-items: center; justify-content: space-around; padding: 4px 10px; flex-shrink: 0; }
-        .coop { display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px 16px; border-radius: 12px; width: 100%; height: 85%; }
-        .coop-icon { font-size: 24px; }
-        .coop-text { font-size: 13px; font-weight: bold; color: #f39c12; text-transform: uppercase; letter-spacing: 1px; }
-        #result-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .result-box { background: rgba(44, 62, 80, 0.95); backdrop-filter: blur(4px); border-radius: 16px; padding: 25px 20px; width: 90%; max-width: 320px; border: 2px solid rgba(241, 196, 15, 0.8); box-shadow: 0 0 20px rgba(241, 196, 15, 0.3); }
-        .result-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        #bottom-zone { height: 10vh; background-color: #8e44ad; border-top: 3px solid #9b59b6; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; }
+        .coop { display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 6px 16px; border-radius: 12px; width: 100%; height: 80%; }
+        .coop-icon { font-size: 28px; }
+        .coop-text { font-size: 14px; font-weight: bold; color: #f39c12; text-transform: uppercase; letter-spacing: 1px; }
+        #result-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.25); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding: 20px; text-align: center; }
+        .result-box { margin-top: 50px; background: rgba(44, 62, 80, 0.50); backdrop-filter: blur(4px); border-radius: 16px; padding: 30px 20px; width: 90%; max-width: 320px; border: 2px solid rgba(241, 196, 15, 0.8); box-shadow: 0 0 20px rgba(241, 196, 15, 0.3); }
+        .result-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; }
         .result-title.win { color: #2ecc71; }
         .result-title.lose { color: #e74c3c; }
-        .result-time { font-size: 15px; margin-bottom: 20px; color: #ecf0f1; }
-        .btn-restart { width: 100%; padding: 12px; background: #3498db; border: none; border-radius: 20px; color: white; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .result-time { font-size: 16px; margin-bottom: 20px; color: #ecf0f1; }
+        .btn-restart { width: 100%; padding: 12px; background: #3498db; border: none; border-radius: 20px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="app-container">
-        <!-- START SCREEN -->
+        <!-- 1. START SCREEN -->
         <div id="start-screen">
             <div class="title-box">
                 <h1>Ngăn Thú Dữ</h1>
@@ -89,7 +86,7 @@
 
             <div class="options-box">
                 <div class="option-group">
-                    <div class="section-label" style="font-size:12px; margin-bottom:6px;">TỐC ĐỘ DI CHUYỂN</div>
+                    <div class="section-label" style="font-size:13px; margin-bottom:6px;">TỐC ĐỘ DI CHUYỂN</div>
                     <div class="speed-btn-group">
                         <button class="speed-btn active" onclick="setSpeed(600, this)">Chậm (6s)</button>
                         <button class="speed-btn" onclick="setSpeed(400, this)">Vừa (4s)</button>
@@ -101,7 +98,7 @@
             <button class="btn-start" onclick="startGame()">VÀO GAME</button>
         </div>
 
-        <!-- GAME SCREEN -->
+        <!-- 2. GAME SCREEN -->
         <div id="header-zone">
             <div class="hud-top-bar">
                 <div class="hud-info">
@@ -111,8 +108,8 @@
                     <span class="char-title-text" id="hud-char-name">---</span>
                 </div>
                 <div class="inventory-box">
-                    <img id="hud-shield-img" class="shield-icon" src="" alt="Khiên">
-                    <span class="shield-count" id="shield-count">2</span>
+                <img id="hud-shield-img" class="shield-icon" src="" alt="Khiên">
+                <span class="shield-count" id="shield-count">2</span>
                 </div>
             </div>
 
@@ -150,38 +147,37 @@
             Math.floor(COLS * 0.8)
         ];
 
-        // 1. Cấu hình ảnh chướng ngại vật tại đây
-        const OBSTACLE_RANDOM_SRC = 'ca-sau.png'; // Ảnh Hòn đá ngẫu nhiên ban đầu
-        const OBSTACLE_PLACED_SRC = 'https://cdn-icons-png.flaticon.com/512/929/929429.png';   // Ảnh Hàng rào/Khiên người chơi đặt
-
-        // Nạp trước ảnh chướng ngại vật
-        const randomObstacleImg = new Image();
-        randomObstacleImg.src = OBSTACLE_RANDOM_SRC;
-
-        const placedObstacleImg = new Image();
-        placedObstacleImg.src = OBSTACLE_PLACED_SRC;
-
-        // Cập nhật icon khiên ở thanh HUD góc trên
-        document.getElementById('hud-shield-img').src = OBSTACLE_PLACED_SRC;
-
         // DANH SÁCH THÚ DỮ VÀ ĐƯỜNG DẪN ẢNH
+        const OBSTACLE_RANDOM_SRC = 'https://cdn-icons-png.flaticon.com/512/3504/3504827.png'; // Ảnh đá ngẫu nhiên
+const OBSTACLE_PLACED_SRC = 'https://cdn-icons-png.flaticon.com/512/929/929429.png';   // Ảnh rào/khiên người chơi đặt
+
+     
         const characters = [
             { id: 'cho', name: 'Chó', src: 'https://cdn-icons-png.flaticon.com/512/616/616408.png' },
             { id: 'casau', name: 'Cá Sấu', src: 'ca-sau.png' },
             { id: 'gau', name: 'Gấu', src: 'https://cdn-icons-png.flaticon.com/512/616/616412.png' }
         ];
 
+        // Nạp sẵn ảnh
+        const randomObstacleImg = new Image();
+        randomObstacleImg.src = OBSTACLE_RANDOM_SRC;
+
+        const placedObstacleImg = new Image();
+        placedObstacleImg.src = OBSTACLE_PLACED_SRC;
         const charImages = {};
         characters.forEach(char => {
             charImages[char.id] = new Image();
             charImages[char.id].src = char.src;
         });
 
+        document.getElementById('hud-shield-img').src = OBSTACLE_PLACED_SRC;
+
+        // Hiển thị ảnh xem trước ở màn hình bắt đầu
         document.getElementById('preview-cho').src = characters[0].src;
         document.getElementById('preview-casau').src = characters[1].src;
         document.getElementById('preview-gau').src = characters[2].src;
 
-        let currentBeast = null;
+        let currentBeast = null; // Lưu thú dữ ngẫu nhiên hiện tại
         let stepIntervalMs = 600;
         let hasObstacles = true;
         
@@ -206,21 +202,13 @@
 
         function resizeCanvas() {
             const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
+            canvas.width = rect.width || canvas.clientWidth || 300;
+            canvas.height = rect.height || canvas.clientHeight || 450;
             cellW = canvas.width / COLS;
             cellH = canvas.height / ROWS;
-            
-            if (beastPos.r !== -1 && beastPos.c !== -1) {
-                beastPixel.x = beastPos.c * cellW + cellW / 2;
-                beastPixel.y = beastPos.r * cellH + cellH / 2;
-            }
         }
 
         window.addEventListener('resize', resizeCanvas);
-        if (window.ResizeObserver) {
-            new ResizeObserver(resizeCanvas).observe(document.getElementById('app-container'));
-        }
 
         function setSpeed(ms, element) {
             stepIntervalMs = ms;
@@ -232,6 +220,7 @@
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('result-modal').style.display = 'none';
 
+            // Đặt lại hiển thị tên/ảnh ở góc trên thành trạng thái chờ
             document.getElementById('hud-char-name').textContent = 'Đang chờ...';
             document.getElementById('hud-avatar-img').style.display = 'none';
 
@@ -264,7 +253,7 @@
                     let randR = Math.floor(Math.random() * (ROWS - 2)) + 1;
                     let randC = Math.floor(Math.random() * COLS);
                     if (grid[randR][randC] === 0) {
-                        grid[randR][randC] = 2; // Giá trị 2 đại diện cho vật cản ngẫu nhiên
+                        grid[randR][randC] = 2;
                         count++;
                     }
                 }
@@ -276,14 +265,17 @@
         }
 
         function startSpawning() {
+            // 1. Chọn ngẫu nhiên 1 nhân vật trong danh sách
             const randomCharIndex = Math.floor(Math.random() * characters.length);
             currentBeast = characters[randomCharIndex];
 
+            // 2. Cập nhật tên và ảnh đại diện lên góc trên bên trái HUD
             const hudAvatarImg = document.getElementById('hud-avatar-img');
             hudAvatarImg.src = currentBeast.src;
             hudAvatarImg.style.display = 'block';
             document.getElementById('hud-char-name').textContent = currentBeast.name;
 
+            // 3. Mở cửa ngẫu nhiên
             const doorIndex = Math.floor(Math.random() * 3);
             const doorEl = document.getElementById(`door-${doorIndex}`);
             if (doorEl) {
@@ -315,7 +307,7 @@
             if (grid[r][c] !== 0) return;
             if (beastPos.r === r && beastPos.c === c) return;
 
-            grid[r][c] = 1; // Giá trị 1 đại diện cho chướng ngại vật người chơi đặt
+            grid[r][c] = 1;
             shieldInventory--;
             shieldCountEl.textContent = shieldInventory;
 
@@ -416,37 +408,34 @@
 
             if (cellW <= 0 || cellH <= 0) return;
 
-            // 1. Vẽ đường lưới và các chướng ngại vật
+            // 1. Vẽ đường lưới và vật cản
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     ctx.strokeStyle = 'rgba(0,0,0,0.15)';
                     ctx.lineWidth = 1;
                     ctx.strokeRect(c * cellW, r * cellH, cellW, cellH);
 
-                    // Chướng ngại vật người chơi ĐẶT (grid = 1)
-                    if (grid[r][c] === 1) {
-                        if (placedObstacleImg.complete && placedObstacleImg.naturalWidth !== 0) {
-                            ctx.drawImage(placedObstacleImg, c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
-                        } else {
-                            ctx.fillStyle = '#d35400';
-                            ctx.fillRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
+                   if (grid[r][c] === 1) { // Chướng ngại vật do NGƯỜI CHƠI ĐẶT
+                    if (placedObstacleImg.complete && placedObstacleImg.naturalWidth !== 0) {
+                    ctx.drawImage(placedObstacleImg, c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
+                } else {
+                    ctx.fillStyle = '#d35400';
+                    ctx.fillRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
                         }
-                    } 
-                    // Chướng ngại vật NGẪU NHIÊN ban đầu (grid = 2)
-                    else if (grid[r][c] === 2) {
-                        if (randomObstacleImg.complete && randomObstacleImg.naturalWidth !== 0) {
-                            ctx.drawImage(randomObstacleImg, c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
-                        } else {
-                            ctx.font = `${cellH * 0.55}px Arial, sans-serif`;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText('🪨', c * cellW + cellW / 2, r * cellH + cellH / 2);
-                        }
+                    } else if (grid[r][c] === 2) { // Chướng ngại vật NGẪU NHIÊN ban đầu
+                if (randomObstacleImg.complete && randomObstacleImg.naturalWidth !== 0) {
+                    ctx.drawImage(randomObstacleImg, c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
+                } else {
+                ctx.font = `${cellH * 0.55}px Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🪨', c * cellW + cellW / 2, r * cellH + cellH / 2);
+                    }
                     }
                 }
             }
 
-            // 2. Vẽ thú dữ
+            // 2. Vẽ thú dữ ngẫu nhiên hiện tại
             if (gameActive && currentBeast) {
                 const img = charImages[currentBeast.id];
                 
@@ -502,7 +491,6 @@
             document.getElementById('start-screen').style.display = 'flex';
         }
 
-        resizeCanvas();
         gameLoop();
     </script>
 </body>
