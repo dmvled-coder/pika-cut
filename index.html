@@ -12,11 +12,13 @@
         .title-box h1 { font-size: 26px; color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 8px; text-transform: uppercase; }
         .title-box p { font-size: 14px; color: #ecf0f1; opacity: 0.9; }
         .section-label { font-size: 16px; font-weight: bold; color: #e0e0e0; margin-bottom: 12px; }
-        .character-select { display: flex; justify-content: space-around; width: 100%; gap: 10px; }
-        .char-card { flex: 1; background: rgba(255, 255, 255, 0.1); border: 2px solid transparent; border-radius: 12px; padding: 12px 5px; cursor: pointer; transition: all 0.2s ease; }
-        .char-card.selected { border-color: #f1c40f; background: rgba(241, 196, 15, 0.2); transform: scale(1.05); }
-        .char-icon { font-size: 40px; display: block; margin-bottom: 5px; }
-        .char-name { font-size: 14px; font-weight: bold; }
+        
+        /* Hiển thị danh sách nhân vật (Không chọn) */
+        .character-display { display: flex; justify-content: space-around; width: 100%; gap: 10px; }
+        .char-card-show { flex: 1; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(241, 196, 15, 0.4); border-radius: 12px; padding: 12px 5px; }
+        .char-img-preview { width: 45px; height: 45px; object-fit: contain; margin-bottom: 5px; }
+        .char-name { font-size: 14px; font-weight: bold; display: block; }
+
         .options-box { background: rgba(0, 0, 0, 0.25); padding: 15px; border-radius: 12px; width: 100%; }
         .option-group { margin-bottom: 12px; }
         .option-group:last-child { margin-bottom: 0; }
@@ -28,7 +30,8 @@
         #header-zone { height: 10vh; background-color: #34495e; display: flex; flex-direction: column; justify-content: space-between; padding: 6px 0 0 0; border-bottom: 3px solid #2c3e50; position: relative; z-index: 10; }
         .hud-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
         .hud-info { display: flex; align-items: center; gap: 8px; }
-        .selected-avatar { width: 32px; height: 32px; background: #2c3e50; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid #f1c40f; }
+        .selected-avatar { width: 34px; height: 34px; background: #2c3e50; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #f1c40f; overflow: hidden; }
+        .selected-avatar img { width: 80%; height: 80%; object-fit: contain; }
         .char-title-text { font-size: 14px; font-weight: bold; color: #f1c40f; }
         .inventory-box { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 16px; border: 1px solid #f1c40f; }
         .shield-icon { width: 16px; height: 16px; background: #e67e22; border-radius: 3px; display: inline-block; box-shadow: 0 0 4px rgba(230, 126, 34, 0.8); }
@@ -64,18 +67,18 @@
             </div>
 
             <div style="width: 100%;">
-                <div class="section-label">CHỌN NHÂN VẬT THÚ DỮ</div>
-                <div class="character-select">
-                    <div class="char-card selected" onclick="selectCharacter('🐕', 'Chó', this)">
-                        <span class="char-icon">🐕</span>
+                <div class="section-label">CÁC THÚ DỮ SẼ XUẤT HIỆN NGẪU NHIÊN</div>
+                <div class="character-display">
+                    <div class="char-card-show">
+                        <img id="preview-cho" class="char-img-preview" alt="Chó">
                         <span class="char-name">Chó</span>
                     </div>
-                    <div class="char-card" onclick="selectCharacter('🐊', 'Cá Sấu', this)">
-                        <span class="char-icon">🐊</span>
+                    <div class="char-card-show">
+                        <img id="preview-casau" class="char-img-preview" alt="Cá Sấu">
                         <span class="char-name">Cá Sấu</span>
                     </div>
-                    <div class="char-card" onclick="selectCharacter('🐻', 'Gấu', this)">
-                        <span class="char-icon">🐻</span>
+                    <div class="char-card-show">
+                        <img id="preview-gau" class="char-img-preview" alt="Gấu">
                         <span class="char-name">Gấu</span>
                     </div>
                 </div>
@@ -99,8 +102,10 @@
         <div id="header-zone">
             <div class="hud-top-bar">
                 <div class="hud-info">
-                    <div class="selected-avatar" id="hud-avatar">🐕</div>
-                    <span class="char-title-text" id="hud-char-name">Chó</span>
+                    <div class="selected-avatar">
+                        <img id="hud-avatar-img" src="" alt="Avatar">
+                    </div>
+                    <span class="char-title-text" id="hud-char-name">---</span>
                 </div>
                 <div class="inventory-box">
                     <div class="shield-icon"></div>
@@ -142,8 +147,26 @@
             Math.floor(COLS * 0.8)
         ];
 
-        let selectedChar = '🐕';
-        let selectedCharName = 'Chó';
+        // DANH SÁCH THÚ DỮ VÀ ĐƯỜNG DẪN ẢNH
+        const characters = [
+            { id: 'cho', name: 'Chó', src: 'https://cdn-icons-png.flaticon.com/512/616/616408.png' },
+            { id: 'casau', name: 'Cá Sấu', src: 'https://cdn-icons-png.flaticon.com/512/3069/3069172.png' },
+            { id: 'gau', name: 'Gấu', src: 'https://cdn-icons-png.flaticon.com/512/616/616412.png' }
+        ];
+
+        // Nạp sẵn ảnh
+        const charImages = {};
+        characters.forEach(char => {
+            charImages[char.id] = new Image();
+            charImages[char.id].src = char.src;
+        });
+
+        // Hiển thị ảnh xem trước ở màn hình bắt đầu
+        document.getElementById('preview-cho').src = characters[0].src;
+        document.getElementById('preview-casau').src = characters[1].src;
+        document.getElementById('preview-gau').src = characters[2].src;
+
+        let currentBeast = null; // Lưu thú dữ ngẫu nhiên hiện tại
         let stepIntervalMs = 600;
         let hasObstacles = true;
         
@@ -156,19 +179,6 @@
         let shieldRegenTimer = null;
         let doorOpenTimeout = null;
 
-        // --- KHAI BÁO ẢNH PNG CHO THÚ ---
-        const charImages = {
-            '🐕': new Image(),
-            '🐊': new Image(),
-            '🐻': new Image()
-        };
-
-        // BẠN HÃY THAY LINK ẢNH PNG CỦA BẠN VÀO ĐÂY:
-        charImages['🐕'].src = 'https://cdn-icons-png.flaticon.com/512/616/616408.png'; // Ảnh con chó PNG
-        charImages['🐊'].src = 'https://cdn-icons-png.flaticon.com/512/3069/3069172.png'; // Ảnh cá sấu PNG
-        charImages['🐻'].src = 'https://cdn-icons-png.flaticon.com/512/616/616412.png'; // Ảnh gấu PNG
-
-        // Biến tính toán nhịp chạy
         let animStep = 0;
 
         const canvas = document.getElementById('game-canvas');
@@ -189,15 +199,6 @@
 
         window.addEventListener('resize', resizeCanvas);
 
-        function selectCharacter(emoji, name, element) {
-            selectedChar = emoji;
-            selectedCharName = name;
-            document.querySelectorAll('.char-card').forEach(card => card.classList.remove('selected'));
-            element.classList.add('selected');
-            document.getElementById('hud-avatar').textContent = emoji;
-            document.getElementById('hud-char-name').textContent = name;
-        }
-
         function setSpeed(ms, element) {
             stepIntervalMs = ms;
             document.querySelectorAll('.speed-btn').forEach(btn => btn.classList.remove('active'));
@@ -207,6 +208,10 @@
         function startGame() {
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('result-modal').style.display = 'none';
+
+            // Đặt lại hiển thị tên/ảnh ở góc trên thành trạng thái chờ
+            document.getElementById('hud-char-name').textContent = 'Đang chờ...';
+            document.getElementById('hud-avatar-img').style.display = 'none';
 
             resizeCanvas();
             initBoard();
@@ -249,6 +254,17 @@
         }
 
         function startSpawning() {
+            // 1. Chọn ngẫu nhiên 1 nhân vật trong danh sách
+            const randomCharIndex = Math.floor(Math.random() * characters.length);
+            currentBeast = characters[randomCharIndex];
+
+            // 2. Cập nhật tên và ảnh đại diện lên góc trên bên trái HUD
+            const hudAvatarImg = document.getElementById('hud-avatar-img');
+            hudAvatarImg.src = currentBeast.src;
+            hudAvatarImg.style.display = 'block';
+            document.getElementById('hud-char-name').textContent = currentBeast.name;
+
+            // 3. Mở cửa ngẫu nhiên
             const doorIndex = Math.floor(Math.random() * 3);
             const doorEl = document.getElementById(`door-${doorIndex}`);
             if (doorEl) {
@@ -371,8 +387,6 @@
                 } else {
                     beastPixel.x += (dx / dist) * speed;
                     beastPixel.y += (dy / dist) * speed;
-                    
-                    // Tăng biến nhịp chạy khi thú đang di chuyển
                     animStep += 0.25;
                 }
             }
@@ -383,7 +397,7 @@
 
             if (cellW <= 0 || cellH <= 0) return;
 
-            // 1. Vẽ đường lưới và chướng ngại vật
+            // 1. Vẽ đường lưới và vật cản
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     ctx.strokeStyle = 'rgba(0,0,0,0.15)';
@@ -405,27 +419,20 @@
                 }
             }
 
-            // 2. Vẽ thú dữ di chuyển với hiệu ứng chạy
-            if (gameActive) {
-                const img = charImages[selectedChar];
+            // 2. Vẽ thú dữ ngẫu nhiên hiện tại
+            if (gameActive && currentBeast) {
+                const img = charImages[currentBeast.id];
                 
                 ctx.save();
                 ctx.translate(beastPixel.x, beastPixel.y);
 
                 if (img && img.complete && img.naturalWidth !== 0) {
-                    // Cấu hình hiệu ứng lắc lư / nhún khi di chuyển
-                    const bounceY = Math.sin(animStep) * 4;       // Nhún lên xuống
-                    const rotateAngle = Math.cos(animStep) * 0.12; // Nghiêng trái/phải giả lập bước chân
+                    const bounceY = Math.sin(animStep) * 4;
+                    const rotateAngle = Math.cos(animStep) * 0.12;
 
                     ctx.rotate(rotateAngle);
                     const size = cellH * 0.85;
                     ctx.drawImage(img, -size / 2, -size / 2 + bounceY, size, size);
-                } else {
-                    // Dự phòng hiện Emoji nếu ảnh chưa tải kịp
-                    ctx.font = `${cellH * 0.75}px Arial, sans-serif`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(selectedChar, 0, 0);
                 }
 
                 ctx.restore();
@@ -451,11 +458,11 @@
             if (isWin) {
                 titleEl.textContent = 'BẠN ĐÃ THẮNG!';
                 titleEl.className = 'result-title win';
-                timeEl.textContent = `Đã vây kín thú dữ trong ${elapsedSec} giây!`;
+                timeEl.textContent = `Đã vây kín ${currentBeast ? currentBeast.name : 'thú dữ'} trong ${elapsedSec} giây!`;
             } else {
                 titleEl.textContent = 'BẠN ĐÃ THUA!';
                 titleEl.className = 'result-title lose';
-                timeEl.textContent = `Thú dữ đã chạm chuồng gà sau ${elapsedSec} giây.`;
+                timeEl.textContent = `${currentBeast ? currentBeast.name : 'Thú dữ'} đã chạm chuồng gà sau ${elapsedSec} giây.`;
             }
 
             modal.style.display = 'flex';
