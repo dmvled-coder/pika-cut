@@ -108,8 +108,8 @@
                     <span class="char-title-text" id="hud-char-name">---</span>
                 </div>
                 <div class="inventory-box">
-                <img id="hud-shield-img" class="shield-icon" src="" alt="Khiên">
-                <span class="shield-count" id="shield-count">2</span>
+                    <img id="hud-shield-img" class="shield-icon" src="" alt="Khiên">
+                    <span class="shield-count" id="shield-count">2</span>
                 </div>
             </div>
 
@@ -147,23 +147,23 @@
             Math.floor(COLS * 0.8)
         ];
 
-        // DANH SÁCH THÚ DỮ VÀ ĐƯỜNG DẪN ẢNH
+        // DANH SÁCH CHƯỚNG NGẠI VẬT VÀ THÚ DỮ
         const OBSTACLE_RANDOM_SRC = 'https://cdn-icons-png.flaticon.com/512/3504/3504827.png'; // Ảnh đá ngẫu nhiên
-const OBSTACLE_PLACED_SRC = 'https://cdn-icons-png.flaticon.com/512/929/929429.png';   // Ảnh rào/khiên người chơi đặt
+        const OBSTACLE_PLACED_SRC = 'https://cdn-icons-png.flaticon.com/512/929/929429.png';   // Ảnh rào/khiên người chơi đặt
 
-     
         const characters = [
             { id: 'cho', name: 'Chó', src: 'https://cdn-icons-png.flaticon.com/512/616/616408.png' },
             { id: 'casau', name: 'Cá Sấu', src: 'ca-sau.png' },
             { id: 'gau', name: 'Gấu', src: 'https://cdn-icons-png.flaticon.com/512/616/616412.png' }
         ];
 
-        // Nạp sẵn ảnh
+        // Nạp sẵn ảnh vào bộ nhớ
         const randomObstacleImg = new Image();
         randomObstacleImg.src = OBSTACLE_RANDOM_SRC;
 
         const placedObstacleImg = new Image();
         placedObstacleImg.src = OBSTACLE_PLACED_SRC;
+
         const charImages = {};
         characters.forEach(char => {
             charImages[char.id] = new Image();
@@ -415,22 +415,22 @@ const OBSTACLE_PLACED_SRC = 'https://cdn-icons-png.flaticon.com/512/929/929429.p
                     ctx.lineWidth = 1;
                     ctx.strokeRect(c * cellW, r * cellH, cellW, cellH);
 
-                   if (grid[r][c] === 1) { // Chướng ngại vật do NGƯỜI CHƠI ĐẶT
-                    if (placedObstacleImg.complete && placedObstacleImg.naturalWidth !== 0) {
-                    ctx.drawImage(placedObstacleImg, c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
-                } else {
-                    ctx.fillStyle = '#d35400';
-                    ctx.fillRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
+                    if (grid[r][c] === 1) { // Chướng ngại vật do NGƯỜI CHƠI ĐẶT
+                        if (placedObstacleImg.complete && placedObstacleImg.naturalWidth !== 0) {
+                            ctx.drawImage(placedObstacleImg, c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
+                        } else {
+                            ctx.fillStyle = '#d35400';
+                            ctx.fillRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
                         }
                     } else if (grid[r][c] === 2) { // Chướng ngại vật NGẪU NHIÊN ban đầu
-                if (randomObstacleImg.complete && randomObstacleImg.naturalWidth !== 0) {
-                    ctx.drawImage(randomObstacleImg, c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
-                } else {
-                ctx.font = `${cellH * 0.55}px Arial, sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('🪨', c * cellW + cellW / 2, r * cellH + cellH / 2);
-                    }
+                        if (randomObstacleImg.complete && randomObstacleImg.naturalWidth !== 0) {
+                            ctx.drawImage(randomObstacleImg, c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
+                        } else {
+                            ctx.font = `${cellH * 0.55}px Arial, sans-serif`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText('🪨', c * cellW + cellW / 2, r * cellH + cellH / 2);
+                        }
                     }
                 }
             }
@@ -447,7 +447,7 @@ const OBSTACLE_PLACED_SRC = 'https://cdn-icons-png.flaticon.com/512/929/929429.p
                     const rotateAngle = Math.cos(animStep) * 0.12;
 
                     ctx.rotate(rotateAngle);
-                    const size = cellH * 0.99;
+                    const size = cellH * 0.99; // Kích thước con thú chiếm 99% chiều cao 1 ô
                     ctx.drawImage(img, -size / 2, -size / 2 + bounceY, size, size);
                 }
 
