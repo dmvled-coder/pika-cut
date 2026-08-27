@@ -13,7 +13,6 @@
         .title-box p { font-size: 14px; color: #ecf0f1; opacity: 0.9; }
         .section-label { font-size: 16px; font-weight: bold; color: #e0e0e0; margin-bottom: 12px; }
         
-        /* Hiển thị danh sách nhân vật (Không chọn) */
         .character-display { display: flex; justify-content: space-around; width: 100%; gap: 10px; }
         .char-card-show { flex: 1; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(241, 196, 15, 0.4); border-radius: 12px; padding: 12px 5px; }
         .char-img-preview { width: 45px; height: 45px; object-fit: contain; margin-bottom: 5px; }
@@ -147,50 +146,87 @@
             Math.floor(COLS * 0.8)
         ];
 
-        // DANH SÁCH CHƯỚNG NGẠI VẬT VÀ THÚ DỮ
-        const OBSTACLE_RANDOM_SRC = 'https://cdn-icons-png.flaticon.com/512/3504/3504827.png'; // Ảnh đá ngẫu nhiên
-        const OBSTACLE_PLACED_SRC = 'https://cdn-icons-png.flaticon.com/512/929/929429.png';   // Ảnh rào/khiên người chơi đặt
+        // DANH SÁCH CHƯỚNG NGẠI VẬT
+        const OBSTACLE_RANDOM_SRC = 'https://cdn-icons-png.flaticon.com/512/3504/3504827.png';
+        const OBSTACLE_PLACED_SRC = 'https://cdn-icons-png.flaticon.com/512/929/929429.png';
 
+        // DANH SÁCH NHÂN VẬT VÀ CÁC MẢNG KHUNG HÌNH (FRAMES) CỦA MỖI CON
+        // Lưu ý: Các ảnh mặc định nên vẽ theo hướng ĐẦU HƯỚNG LÊN TRÊN (hoặc bạn điều chỉnh baseAngle tương ứng)
         const characters = [
-            { id: 'cho', name: 'Chó', src: 'https://cdn-icons-png.flaticon.com/512/616/616408.png' },
-            { id: 'casau', name: 'Cá Sấu', src: 'ca-sau.png' },
-            { id: 'gau', name: 'Gấu', src: 'https://cdn-icons-png.flaticon.com/512/616/616412.png' }
+            { 
+                id: 'cho', 
+                name: 'Chó', 
+                baseAngle: 0, // 0 rad: Đầu hướng LÊN TRÊN theo ảnh gốc
+                frames: [
+                    'https://cdn-icons-png.flaticon.com/512/616/616408.png',
+                    'https://cdn-icons-png.flaticon.com/512/616/616408.png',
+                    'https://cdn-icons-png.flaticon.com/512/616/616408.png',
+                    'https://cdn-icons-png.flaticon.com/512/616/616408.png'
+                ] 
+            },
+            { 
+                id: 'casau', 
+                name: 'Cá Sấu', 
+                baseAngle: 0,
+                frames: [
+                    'ca-sau.png',
+                    'ca-sau.png',
+                    'ca-sau.png'
+                ] 
+            },
+            { 
+                id: 'gau', 
+                name: 'Gấu', 
+                baseAngle: 0,
+                frames: [
+                    'https://cdn-icons-png.flaticon.com/512/616/616412.png',
+                    'https://cdn-icons-png.flaticon.com/512/616/616412.png',
+                    'https://cdn-icons-png.flaticon.com/512/616/616412.png',
+                    'https://cdn-icons-png.flaticon.com/512/616/616412.png'
+                ] 
+            }
         ];
 
-        // Nạp sẵn ảnh vào bộ nhớ
+        // Nạp sẵn ảnh chướng ngại vật
         const randomObstacleImg = new Image();
         randomObstacleImg.src = OBSTACLE_RANDOM_SRC;
 
         const placedObstacleImg = new Image();
         placedObstacleImg.src = OBSTACLE_PLACED_SRC;
 
+        // Preload toàn bộ các frame ảnh hoạt hoạ cho từng nhân vật
         const charImages = {};
         characters.forEach(char => {
-            charImages[char.id] = new Image();
-            charImages[char.id].src = char.src;
+            charImages[char.id] = char.frames.map(src => {
+                const img = new Image();
+                img.src = src;
+                return img;
+            });
         });
 
         document.getElementById('hud-shield-img').src = OBSTACLE_PLACED_SRC;
 
-        // Hiển thị ảnh xem trước ở màn hình bắt đầu
-        document.getElementById('preview-cho').src = characters[0].src;
-        document.getElementById('preview-casau').src = characters[1].src;
-        document.getElementById('preview-gau').src = characters[2].src;
+        // Hiển thị ảnh xem trước (khung hình 0) ở màn hình bắt đầu
+        document.getElementById('preview-cho').src = characters[0].frames[0];
+        document.getElementById('preview-casau').src = characters[1].frames[0];
+        document.getElementById('preview-gau').src = characters[2].frames[0];
 
-        let currentBeast = null; // Lưu thú dữ ngẫu nhiên hiện tại
+        let currentBeast = null; 
         let stepIntervalMs = 600;
         let hasObstacles = true;
         
         let grid = [];
         let beastPos = { r: -1, c: -1 };
         let beastPixel = { x: 0, y: 0 };
+        let beastAngle = Math.PI; // Mặc định hướng đi xuống dưới (xuống chuồng gà)
+        let frameIndex = 0;      // Chỉ số frame hiện tại
+        let frameTimer = 0;      // Bộ đếm thời gian chuyển frame
+
         let shieldInventory = 2;
         let gameActive = false;
         let startTime = 0;
         let shieldRegenTimer = null;
         let doorOpenTimeout = null;
-
-        let animStep = 0;
 
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
@@ -220,7 +256,6 @@
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('result-modal').style.display = 'none';
 
-            // Đặt lại hiển thị tên/ảnh ở góc trên thành trạng thái chờ
             document.getElementById('hud-char-name').textContent = 'Đang chờ...';
             document.getElementById('hud-avatar-img').style.display = 'none';
 
@@ -265,17 +300,14 @@
         }
 
         function startSpawning() {
-            // 1. Chọn ngẫu nhiên 1 nhân vật trong danh sách
             const randomCharIndex = Math.floor(Math.random() * characters.length);
             currentBeast = characters[randomCharIndex];
 
-            // 2. Cập nhật tên và ảnh đại diện lên góc trên bên trái HUD
             const hudAvatarImg = document.getElementById('hud-avatar-img');
-            hudAvatarImg.src = currentBeast.src;
+            hudAvatarImg.src = currentBeast.frames[0];
             hudAvatarImg.style.display = 'block';
             document.getElementById('hud-char-name').textContent = currentBeast.name;
 
-            // 3. Mở cửa ngẫu nhiên
             const doorIndex = Math.floor(Math.random() * 3);
             const doorEl = document.getElementById(`door-${doorIndex}`);
             if (doorEl) {
@@ -289,6 +321,8 @@
                 x: startCol * cellW + cellW / 2, 
                 y: 0 * cellH + cellH / 2 
             };
+            beastAngle = Math.PI; // Ban đầu xoay đầu đi xuống dưới
+            frameIndex = 0;
 
             gameActive = true;
             startTime = Date.now();
@@ -383,6 +417,12 @@
                 let dy = targetY - beastPixel.y;
                 let dist = Math.hypot(dx, dy);
 
+                // Tính toán góc quay của cơ thể dựa trên hướng di chuyển (dx, dy)
+                if (dist > 0.001) {
+                    // Math.atan2(dy, dx) cho ra góc tương ứng (+ Math.PI/2 để căn đỉnh ảnh lên trên)
+                    beastAngle = Math.atan2(dy, dx) + Math.PI / 2;
+                }
+
                 let speed = (cellH / (stepIntervalMs / 1000)) / 60;
 
                 if (dist <= speed) {
@@ -398,7 +438,15 @@
                 } else {
                     beastPixel.x += (dx / dist) * speed;
                     beastPixel.y += (dy / dist) * speed;
-                    animStep += 0.25;
+
+                    // Hoạt hoạ chuyển ảnh khung hình (Frame Animation) khi di chuyển
+                    frameTimer++;
+                    if (frameTimer >= 8) { // Cứ sau 8 frame render sẽ đổi 1 ảnh
+                        frameTimer = 0;
+                        if (currentBeast && currentBeast.frames.length > 0) {
+                            frameIndex = (frameIndex + 1) % currentBeast.frames.length;
+                        }
+                    }
                 }
             }
         }
@@ -408,7 +456,7 @@
 
             if (cellW <= 0 || cellH <= 0) return;
 
-            // 1. Vẽ đường lưới và vật cản
+            // 1. Vẽ đường lưới và chướng ngại vật
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     ctx.strokeStyle = 'rgba(0,0,0,0.15)';
@@ -422,7 +470,7 @@
                             ctx.fillStyle = '#d35400';
                             ctx.fillRect(c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
                         }
-                    } else if (grid[r][c] === 2) { // Chướng ngại vật NGẪU NHIÊN ban đầu
+                    } else if (grid[r][c] === 2) { // Chướng ngại vật NGẪU NHIÊN
                         if (randomObstacleImg.complete && randomObstacleImg.naturalWidth !== 0) {
                             ctx.drawImage(randomObstacleImg, c * cellW + 2, r * cellH + 2, cellW - 4, cellH - 4);
                         } else {
@@ -435,20 +483,20 @@
                 }
             }
 
-            // 2. Vẽ thú dữ ngẫu nhiên hiện tại
+            // 2. Vẽ thú dữ xoay hướng cơ thể & hoạt hoạ từng khung hình
             if (gameActive && currentBeast) {
-                const img = charImages[currentBeast.id];
+                const images = charImages[currentBeast.id];
+                const img = images ? images[frameIndex % images.length] : null;
                 
                 ctx.save();
                 ctx.translate(beastPixel.x, beastPixel.y);
+                
+                // Xoay canvas theo hướng di chuyển + góc lệch mặc định của nhân vật
+                ctx.rotate(beastAngle + (currentBeast.baseAngle || 0));
 
                 if (img && img.complete && img.naturalWidth !== 0) {
-                    const bounceY = Math.sin(animStep) * 4;
-                    const rotateAngle = Math.cos(animStep) * 0.12;
-
-                    ctx.rotate(rotateAngle);
-                    const size = cellH * 0.99; // Kích thước con thú chiếm 99% chiều cao 1 ô
-                    ctx.drawImage(img, -size / 2, -size / 2 + bounceY, size, size);
+                    const size = cellH * 0.99;
+                    ctx.drawImage(img, -size / 2, -size / 2, size, size);
                 }
 
                 ctx.restore();
